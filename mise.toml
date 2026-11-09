@@ -1,2 +1,11 @@
 [tools]
 worktrunk = { version = "latest", workflow = "release.yaml" }
+"npm:oxfmt" = "latest"
+
+[tasks.format]
+description = "Format TS/TSX/JSON with oxfmt"
+run = "oxfmt"
+
+[tasks."format:check"]
+description = "Check formatting with oxfmt"
+run = "oxfmt --check"
