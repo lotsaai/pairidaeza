@@ -125,15 +125,44 @@ export interface Run {
 
 export type Appearance = "system" | "light" | "dark";
 
-export type ApprovalStatus = "pending" | "allowed" | "denied";
 export type ApprovalMode = "never" | "auto" | "ask";
 
-export type Message =
+/** The message a reply quotes. */
+export interface Reply {
+  author: string;
+  text: string;
+}
+
+/** An answer a bot's card offers. */
+export interface AskAction {
+  id: string;
+  label: string;
+}
+
+/** A question with lettered options, an approval to run something, or a proposed change to a bot's instructions. */
+export type AskVariant = "options" | "approval" | "instructions";
+
+export type Message = (
   | { id: string; kind: "date"; label: string }
-  | { id: string; kind: "user"; text: string }
+  | { id: string; kind: "user"; text: string; reply?: Reply }
   | { id: string; kind: "bot"; botId: string; markdown: string }
-  | { id: string; kind: "tool"; botId: string; title: string; detail: string }
-  | { id: string; kind: "approval"; botId: string; action: string; detail: string; status: ApprovalStatus };
+  | { id: string; kind: "tool"; botId: string; label: string }
+  | {
+      id: string;
+      kind: "ask";
+      botId: string;
+      variant: AskVariant;
+      text: string;
+      /** The action's details, or the proposed instructions. */
+      detail?: string;
+      actions: AskAction[];
+      /** The chosen action's id, once answered. */
+      answer?: string;
+    }
+) & {
+  /** Emoji people reacted with, and how many each. */
+  reactions?: Record<string, number>;
+};
 
 /** Body colors a new bot can take. */
 export const botColors = ["#3EC5A8", "#F5A03C", "#6A6BF5", "#9B5CF6", "#3B82F6", "#F2622A", "#D9508A"];
@@ -453,6 +482,21 @@ export const appVersion = "0.8.0";
 
 const messages = signal<Record<string, Message[]>>({
   chief: [
+    { id: "c0", kind: "date", label: "Yesterday 4:35 PM" },
+    {
+      id: "c0a",
+      kind: "ask",
+      botId: "chief",
+      variant: "options",
+      text: "Hi Alex—what would you like Chief of Staff to help with?",
+      actions: [
+        { id: "plan", label: "Plan and prioritize" },
+        { id: "research", label: "Research and explain" },
+        { id: "draft", label: "Draft and review" },
+        { id: "other", label: "Something else" },
+      ],
+      answer: "plan",
+    },
     { id: "c1", kind: "date", label: "Today 8:31 AM" },
     { id: "c2", kind: "user", text: "what does this week look like?" },
     {
@@ -462,14 +506,32 @@ const messages = signal<Record<string, Message[]>>({
       markdown:
         "three things matter this week:\n\n1. **Board deck** is due Thursday. Finance has the October close ready; I booked you 2 hours Wednesday morning.\n2. **Helix Labs renewal.** Usage is down 30%. Sales has a call with them Tuesday at 2.\n3. **Hiring.** Two final-round candidates for the design role, Tuesday and Friday.\n\nI moved the vendor sync to next week to make room.",
     },
-    { id: "c4", kind: "tool", botId: "chief", title: "Calendar", detail: "Moved “Vendor sync” to Tue, Nov 17" },
+    { id: "c4", kind: "tool", botId: "chief", label: "Moved “Vendor sync” to Tue, Nov 17" },
     {
       id: "c5",
-      kind: "approval",
+      kind: "ask",
       botId: "chief",
-      action: "Send email",
+      variant: "approval",
+      text: "Send email",
       detail: "To: vendor-team@example.com\n“Moving our sync to next Tuesday, same time.”",
-      status: "pending",
+      actions: [
+        { id: "allow", label: "Allow once" },
+        { id: "always", label: "Always allow this tool" },
+        { id: "deny", label: "Deny" },
+      ],
+    },
+    {
+      id: "c6",
+      kind: "ask",
+      botId: "chief",
+      variant: "instructions",
+      text: "Update instructions?",
+      detail: "Keep my week to three priorities. Ask before sending anything outside the team.",
+      actions: [
+        { id: "allow", label: "Apply" },
+        { id: "edit", label: "Edit" },
+        { id: "deny", label: "Dismiss" },
+      ],
     },
   ],
   launch: [
@@ -503,6 +565,10 @@ const messages = signal<Record<string, Message[]>>({
     },
   ],
 });
+
+/** The message each chat was marked unread from: a divider shows before it until the chat is opened again. */
+const unreadMarkers = signal<Record<string, string>>({});
+export const unreadMarker = (chatId: string) => unreadMarkers()[chatId];
 
 const approvalMode = signal<ApprovalMode>("auto");
 let nextId = 1;
@@ -558,7 +624,18 @@ export const setChatSection = (id: string, sectionId: string | null) => patchCha
 export function markOpened(id: string) {
   const chat = chatById(id);
   if (!chat) return;
-  patchChat(id, { unread: false, snoozedUntil: hasWoken(chat) ? null : chat.snoozedUntil });
+  batch(() => {
+    patchChat(id, { unread: false, snoozedUntil: hasWoken(chat) ? null : chat.snoozedUntil });
+    unreadMarkers.update(({ [id]: _, ...rest }) => rest);
+  });
+}
+
+/** Marks a chat unread from one message on: the sidebar shows it unread and a divider shows before the message. */
+export function markMessageUnread(chatId: string, messageId: string) {
+  batch(() => {
+    patchChat(chatId, { unread: true });
+    unreadMarkers.update((all) => ({ ...all, [chatId]: messageId }));
+  });
 }
 
 /** Snoozes a chat until `until` (ms), or wakes it with null; the list redraws when it wakes. */
@@ -877,12 +954,12 @@ function append(chatId: string, message: Message) {
   messages.update((all) => ({ ...all, [chatId]: [...(all[chatId] ?? []), message] }));
 }
 
-/** Sends a message; a bot of the chat answers after a moment. A blank message sends nothing. */
-export function sendMessage(chatId: string, text: string) {
+/** Sends a message, quoting `reply` when given; a bot of the chat answers after a moment. A blank message sends nothing. */
+export function sendMessage(chatId: string, text: string, reply?: Reply) {
   const trimmed = text.trim();
   const chat = chatById(chatId);
   if (!trimmed || !chat) return;
-  append(chatId, { id: `m${nextId++}`, kind: "user", text: trimmed });
+  append(chatId, { id: `m${nextId++}`, kind: "user", text: trimmed, reply });
   const botId = chat.botIds[0];
   setTimeout(
     () => append(chatId, { id: `m${nextId++}`, kind: "bot", botId, markdown: "on it. I'll report back here when it's done." }),
@@ -890,12 +967,22 @@ export function sendMessage(chatId: string, text: string) {
   );
 }
 
-/** Answers a pending approval card; answered cards stay as they are. */
-export function answerApproval(chatId: string, messageId: string, allowed: boolean) {
+/** Answers a pending card; answered cards stay as they are. An applied instructions card changes its bot's instructions (`instructions` when the user edited them first). */
+export function answerAsk(chatId: string, messageId: string, answer: string, instructions?: string) {
+  const card = (messagesFor(chatId) as Message[]).find((m) => m.id === messageId);
+  if (card?.kind !== "ask" || card.answer !== undefined) return;
+  batch(() => {
+    messages.update((all) => ({ ...all, [chatId]: (all[chatId] ?? []).map((m) => (m.id === messageId ? { ...m, answer } : m)) }));
+    if (card.variant === "instructions" && answer === "allow") updateBot(card.botId, { instructions: instructions ?? card.detail ?? "" });
+  });
+}
+
+/** Adds one reaction to a message. */
+export function reactToMessage(chatId: string, messageId: string, emoji: string) {
   messages.update((all) => ({
     ...all,
     [chatId]: (all[chatId] ?? []).map((m) =>
-      m.id === messageId && m.kind === "approval" && m.status === "pending" ? { ...m, status: allowed ? "allowed" : "denied" } : m,
+      m.id === messageId ? { ...m, reactions: { ...m.reactions, [emoji]: (m.reactions?.[emoji] ?? 0) + 1 } } : m,
     ),
   }));
 }

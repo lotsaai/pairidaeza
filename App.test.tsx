@@ -13,9 +13,38 @@ test("sending a message shows it and a reply arrives", async () => {
 test("an approval card is answered once", async () => {
   const app = await open("./App.tsx");
   await app.press("role:button[Chief of Staff]");
-  await app.press("role:button[Allow]");
-  await app.waitFor("Allowed");
+  await app.press("role:button[Allow once]");
+  await app.waitFor("Allowed once");
   await app.waitFor("role:button[Deny]", { state: "gone" });
+});
+
+test("an option question keeps its options once answered", async () => {
+  const app = await open("./App.tsx", { width: 1280, height: 800 });
+  await app.press("role:button[Chief of Staff]");
+  await app.waitFor("role:button[Plan and prioritize]");
+  expect(app.enabled("role:button[Research and explain]")).toBe(false);
+});
+
+test("a reply is quoted above the message it sends", async () => {
+  const app = await open("./App.tsx", { width: 1280, height: 800, platform: "macos" });
+  await app.press("role:button[Chief of Staff]");
+  await app.hover("text:what does this week look like?");
+  await app.press("role:button[Reply]");
+  await app.waitFor("role:button[Cancel reply]");
+  await app.type("text:Message Chief of Staff", "move it to Friday");
+  await app.press("role:button[Send]");
+  await app.waitFor("↩ You: what does this week look like?");
+  await app.waitFor("role:button[Cancel reply]", { state: "gone" });
+});
+
+test("a reaction shows under its message", async () => {
+  const app = await open("./App.tsx", { width: 1280, height: 800, platform: "macos" });
+  await app.press("role:button[Chief of Staff]");
+  await app.hover("text:what does this week look like?");
+  await app.press("role:button[React]");
+  await app.press("role:button[🎉]");
+  await app.waitFor("role:button[🎉]", { state: "gone" });
+  await app.waitFor("🎉");
 });
 
 test("a new bot gets its own chat", async () => {
@@ -118,36 +147,14 @@ test("a template makes a bot with its prompt and opens its chat", async () => {
   await app.waitFor("text:Message Claude Proxy");
 });
 
-test("the header menu clears a chat after asking", async () => {
+test("an attached photo goes out with the message", async () => {
   const app = await open("./App.tsx", { width: 1280, height: 800 });
-  app.onDialog((dialog) => {
-    expect(dialog.title).toBe('Clear "Launch team"?');
-    return "Clear history";
-  });
-  await app.press("role:button[Chat options]");
-  await app.press("text:Clear history…");
-  await app.waitFor("Sources are in the thread notes.", { state: "gone" });
-});
-
-test("a pinned chat offers Unpin, and unpinning restores Pin", async () => {
-  const app = await open("./App.tsx", { width: 1280, height: 800 });
-  await app.press("role:button[Writer]");
-  await app.press("role:button[Chat options]");
-  await app.press("text:Pin");
-  await app.press("role:button[Chat options]");
-  await app.press("text:Unpin");
-  await app.press("role:button[Chat options]");
-  await app.waitFor("text:Pin");
-});
-
-test("an attached file goes out with the message", async () => {
-  const app = await open("./App.tsx", { width: 1280, height: 800 });
-  await app.press("role:button[Add]");
-  await app.press("text:Attach file");
-  await app.waitFor("role:button[Remove Q3 report.pdf]");
+  app.onPick(() => [{ name: "Whiteboard.jpg", type: "image/jpeg", data: new Uint8Array([1, 2, 3]) }]);
+  await app.press("role:button[Attach file]");
+  await app.waitFor("role:button[Remove Whiteboard.jpg]");
   await app.press("role:button[Send]");
-  await app.waitFor("📎 Q3 report.pdf");
-  await app.waitFor("role:button[Remove Q3 report.pdf]", { state: "gone" });
+  await app.waitFor("📎 Whiteboard.jpg");
+  await app.waitFor("role:button[Remove Whiteboard.jpg]", { state: "gone" });
 });
 
 test("activity lists what needs an answer and opens its chat", async () => {
@@ -158,32 +165,6 @@ test("activity lists what needs an answer and opens its chat", async () => {
   await app.waitFor("text:Message Chief of Staff");
   await app.press("role:button[Activity]");
   await app.waitFor("text:Needs attention", { state: "gone" });
-});
-
-test("a snoozed chat leaves the list for the Snoozed shelf until unsnoozed", async () => {
-  const app = await open("./App.tsx", { width: 1280, height: 800 });
-  await app.press("role:button[Writer]");
-  await app.press("role:button[Chat options]");
-  await app.press("text:Snooze");
-  await app.press("text:Tomorrow");
-  await app.waitFor("role:button[Writer]", { state: "gone" });
-  await app.press("role:button[Snoozed]");
-  await app.press("role:button[Unsnooze Writer]");
-  await app.waitFor("role:button[Writer]");
-  await app.waitFor("role:button[Snoozed]", { state: "gone" });
-});
-
-test("a chat moves into a new section", async () => {
-  const app = await open("./App.tsx", { width: 1280, height: 800 });
-  await app.press("role:button[Sales]");
-  await app.press("role:button[Chat options]");
-  await app.press("text:Move to");
-  await app.press("text:New section…");
-  await app.type("text:Section name", "Revenue");
-  await app.press("text:Create");
-  await app.waitFor("role:button[Revenue]");
-  await app.press("role:button[Revenue]");
-  await app.waitFor("role:button[Sales]", { state: "gone" });
 });
 
 test("running a routine logs the run and reports in the chat", async () => {

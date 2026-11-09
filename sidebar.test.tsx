@@ -64,24 +64,6 @@ test("activity filters show as chips, narrow the runs and reset together", async
   await app.waitFor("text:Search: vendor", { state: "gone" });
 });
 
-test("a failed run needs attention only while its chat is unread", async () => {
-  const app = await open("./App.tsx", wideWindow);
-  const attention = () => {
-    const texts = app.texts();
-    return texts.slice(texts.indexOf("Needs attention"), texts.indexOf("Working")).includes("couldn't reach the issue tracker");
-  };
-  await app.press("role:button[Activity]");
-  await app.waitFor("text:Needs attention");
-  expect(attention()).toBe(false);
-  await app.press("role:button[Activity]");
-  await app.press("role:button[Bug Triage]");
-  await app.press("role:button[Chat options]");
-  await app.press("text:Mark as unread");
-  await app.press("role:button[Activity]");
-  await app.waitFor("text:Needs attention");
-  expect(attention()).toBe(true);
-});
-
 test("Alt+Up moves a bot row up within its group, and stops at the top", async () => {
   const app = await open("./App.tsx", wideWindow);
   // The list's texts may come bottom row first, so the Chats header says which way they run.

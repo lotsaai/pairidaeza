@@ -10,6 +10,8 @@ import alarmClock from "../icons/alarm-clock.svg";
 import archiveRestore from "../icons/archive-restore.svg";
 import archive from "../icons/archive.svg";
 import arrowUp from "../icons/arrow-up.svg";
+import arrowDown from "../icons/arrow-down.svg";
+import smile from "../icons/smile.svg";
 import arrowUpRight from "../icons/arrow-up-right.svg";
 import calendar from "../icons/calendar.svg";
 import bell from "../icons/bell.svg";
@@ -67,6 +69,8 @@ import users from "../icons/users.svg";
 import x from "../icons/x.svg";
 
 export const icons = {
+  "arrow-down": arrowDown,
+  smile,
   brain,
   "building-2": building2,
   "cloud-download": cloudDownload,

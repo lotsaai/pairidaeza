@@ -1,7 +1,7 @@
-// What can be done to a chat, shared by its row's context menu and its header's menu.
+// What can be done to a chat: its row's context menu.
 import { AlertDialog } from "nsh/base";
-import { MenuDivider, MenuRow, SubmenuRow } from "../components/ui";
-import { nameSection, openBotDetails, selectedChatId } from "../nav";
+import { MenuRow, SubmenuRow, MenuDivider } from "../components/ui";
+import { nameSection, selectedChatId } from "../nav";
 import {
   allSections,
   chatById,
@@ -79,15 +79,11 @@ export async function confirmDelete(id: string) {
   }
 }
 
-/** The chat's menu items; `details` adds the bot details entry (the header's menu). */
-export function ChatActions(props: { chatId: string; details?: boolean }) {
+/** The chat's menu items. */
+export function ChatActions(props: { chatId: string }) {
   const chat = () => chatById(props.chatId);
   return (
     <>
-      <If when={props.details}>
-        <MenuRow icon="panel-right" label="Bot details" onSelect={() => chat() && openBotDetails(chat()!.botIds[0])} />
-        <MenuDivider />
-      </If>
       <MenuRow
         icon={chat()?.pinned ? "pin-off" : "pin"}
         label={chat()?.pinned ? "Unpin" : "Pin"}

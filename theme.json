@@ -35,7 +35,8 @@
       "warning": "#885A07",
       "link": "#0C64C1",
       "overlay": "#00000030",
-      "unread": "#006CEB"
+      "unread": "#006CEB",
+      "primary-disabled": "#1C1C1C26"
     },
     "dark": {
       "background": "#141414",
@@ -68,7 +69,8 @@
       "warning": "#DB941E",
       "link": "#459FFE",
       "overlay": "#00000047",
-      "unread": "#3F8CFF"
+      "unread": "#3F8CFF",
+      "primary-disabled": "#F5F5F521"
     }
   }
 }

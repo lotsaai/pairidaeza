@@ -6,8 +6,8 @@ import { type IconName, icons } from "./icons";
 
 export type { IconName };
 
-/** A Lucide icon tinted with a theme color. */
-export function Icon(props: { name: IconName; size?: number; tone?: keyof Tokens }) {
+/** A Lucide icon tinted with a theme color (or `color`, for a color that is data). */
+export function Icon(props: { name: IconName; size?: number; tone?: keyof Tokens; color?: string }) {
   return (
     <Image
       src={icons[props.name]}
@@ -15,18 +15,19 @@ export function Icon(props: { name: IconName; size?: number; tone?: keyof Tokens
         pointerEvents: "none",
         width: props.size ?? 20,
         height: props.size ?? 20,
-        tintColor: token(props.tone ?? "foreground") as string,
+        tintColor: props.color ?? (token(props.tone ?? "foreground") as string),
       }}
     />
   );
 }
 
-/** A round, icon-only toolbar button. */
+/** A round, icon-only toolbar button; `floating` ones sit on a card over content. */
 export function IconButton(props: {
   icon: IconName;
   label: string;
   onPress?: () => void;
   filled?: boolean;
+  floating?: boolean;
   disabled?: boolean;
   /** A toggle that is on, or a mode that is showing. */
   selected?: boolean;
@@ -37,9 +38,13 @@ export function IconButton(props: {
       disabled={props.disabled}
       selected={props.selected}
       onPress={props.onPress}
-      class={`size-9 items-center justify-center rounded-full disabled:opacity-40 ${props.filled ? "bg-primary active:bg-primary/80" : "hover:bg-accent active:bg-accent selected:bg-accent"}`}
+      class={`${props.floating ? "size-10" : "size-9"} items-center justify-center rounded-full disabled:opacity-40 ${props.filled ? "bg-primary active:bg-primary/80" : `${props.floating ? "bg-card " : ""}hover:bg-accent active:bg-accent selected:bg-accent`}`}
     >
-      <Icon name={props.icon} size={18} tone={props.filled ? "primary-foreground" : props.selected ? "foreground" : "muted-foreground"} />
+      <Icon
+        name={props.icon}
+        size={props.floating ? 17 : 18}
+        tone={props.filled ? "primary-foreground" : props.selected ? "foreground" : "muted-foreground"}
+      />
     </Button>
   );
 }
@@ -53,7 +58,13 @@ const buttonVariants = {
 } as const;
 
 /** A labeled button in one of the app's variants. */
-export function TextButton(props: { label: string; variant?: keyof typeof buttonVariants; onPress?: () => void; disabled?: boolean; accessibilityLabel?: string }) {
+export function TextButton(props: {
+  label: string;
+  variant?: keyof typeof buttonVariants;
+  onPress?: () => void;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+}) {
   const variant = () => buttonVariants[props.variant ?? "default"];
   return (
     <Button
@@ -120,9 +131,21 @@ export function SectionTitle(props: { children: JSX.Element }) {
 const menuBackdrop = "bg-overlay";
 
 /** A menu opened by `trigger`: a popup on desktops, a sheet on phones, in the app's popup surface. */
-export function AppMenu(props: { trigger: JSX.Element; children: JSX.Element; align?: "start" | "center" | "end" }) {
+export function AppMenu(props: {
+  trigger: JSX.Element;
+  children: JSX.Element;
+  align?: "start" | "center" | "end";
+  onOpenChange?: (open: boolean) => void;
+}) {
   return (
-    <Menu trigger={props.trigger} align={props.align} offset={4} popupClass={popupClass} backdropClass={menuBackdrop}>
+    <Menu
+      trigger={props.trigger}
+      align={props.align}
+      offset={4}
+      popupClass={popupClass}
+      backdropClass={menuBackdrop}
+      onOpenChange={props.onOpenChange && (({ open }) => props.onOpenChange?.(open))}
+    >
       {props.children}
     </Menu>
   );
