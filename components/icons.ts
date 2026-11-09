@@ -1,8 +1,16 @@
 // Lucide icons (lucide-static 1.70.0, ISC; https://lucide.dev/guide/static/link-as-image) as SVG assets; `Icon` tints them with a theme token.
+import brain from "../icons/brain.svg";
+import building2 from "../icons/building-2.svg";
+import cloudDownload from "../icons/cloud-download.svg";
+import cpu from "../icons/cpu.svg";
+import gauge from "../icons/gauge.svg";
+import keyRound from "../icons/key-round.svg";
+import volume2 from "../icons/volume-2.svg";
 import alarmClock from "../icons/alarm-clock.svg";
 import archiveRestore from "../icons/archive-restore.svg";
 import archive from "../icons/archive.svg";
 import arrowUp from "../icons/arrow-up.svg";
+import arrowUpRight from "../icons/arrow-up-right.svg";
 import calendar from "../icons/calendar.svg";
 import bell from "../icons/bell.svg";
 import bookOpen from "../icons/book-open.svg";
@@ -52,16 +60,25 @@ import smartphone from "../icons/smartphone.svg";
 import sparkles from "../icons/sparkles.svg";
 import sunMoon from "../icons/sun-moon.svg";
 import trash from "../icons/trash-2.svg";
+import triangleAlert from "../icons/triangle-alert.svg";
 import userPlus from "../icons/user-plus.svg";
 import userRound from "../icons/user-round.svg";
 import users from "../icons/users.svg";
 import x from "../icons/x.svg";
 
 export const icons = {
+  brain,
+  "building-2": building2,
+  "cloud-download": cloudDownload,
+  cpu,
+  gauge,
+  "key-round": keyRound,
+  "volume-2": volume2,
   "alarm-clock": alarmClock,
   "archive-restore": archiveRestore,
   archive,
   "arrow-up": arrowUp,
+  "arrow-up-right": arrowUpRight,
   calendar,
   bell,
   "book-open": bookOpen,
@@ -111,6 +128,7 @@ export const icons = {
   sparkles,
   "sun-moon": sunMoon,
   trash,
+  "triangle-alert": triangleAlert,
   "user-plus": userPlus,
   "user-round": userRound,
   users,

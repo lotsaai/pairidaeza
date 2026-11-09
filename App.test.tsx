@@ -67,17 +67,55 @@ test("on a phone, bot details are a page with a way back", async () => {
   await app.waitFor("text:Message Writer");
 });
 
-test("settings open from the account menu as their own stack", async () => {
+test("settings take over the window with sections beside the page", async () => {
   const app = await open("./App.tsx", { width: 1280, height: 800 });
   await app.press("role:button[Account]");
   await app.press("text:Settings");
-  await app.press("text:Connected apps");
-  await app.waitFor("text:Slack");
-  await app.press("role:switch[Slack]");
-  await app.press("role:button[Back]");
-  await app.waitFor("4 connected");
+  await app.waitFor("text:Send with Enter");
+  await app.press("role:button[Usage]");
+  await app.waitFor("text:Send with Enter", { state: "gone" });
   await app.press("role:button[Close settings]");
-  await app.waitFor("4 apps connected");
+  await app.waitFor("text:Message Launch team");
+});
+
+test("on a phone, settings sections are pages with a way back", async () => {
+  const app = await open("./App.tsx", { width: 390, height: 844 });
+  await app.press("role:button[Account]");
+  await app.press("text:Settings");
+  await app.press("role:button[Organization]");
+  await app.waitFor("text:Delete organization");
+  await app.press("role:button[Back]");
+  await app.waitFor("role:button[Updates]");
+});
+
+test("connecting and removing an app updates the sidebar count", async () => {
+  const app = await open("./App.tsx", { width: 1280, height: 800 });
+  await app.waitFor("text:4 apps connected");
+  await app.press("text:Connect apps");
+  await app.press("role:button[Add Notion]");
+  await app.press("role:button[Close integrations]");
+  await app.waitFor("text:5 apps connected");
+  await app.press("text:Connect apps");
+  await app.press("role:button[5 connected]");
+  await app.press("role:button[Open Notion]");
+  app.onDialog((dialog) => {
+    expect(dialog.title).toBe("Remove from every space?");
+    return "Remove";
+  });
+  await app.press("role:button[Uninstall]");
+  await app.press("role:button[Close integrations]");
+  await app.waitFor("text:4 apps connected");
+});
+
+test("a template makes a bot with its prompt and opens its chat", async () => {
+  const app = await open("./App.tsx", { width: 1280, height: 800 });
+  await app.press("text:Connect apps");
+  await app.press("role:button[Templates]");
+  await app.press("role:button[Productivity]");
+  await app.press("role:button[Open Claude Proxy]");
+  await app.waitFor("text:It becomes the bot's instructions.");
+  await app.press("role:button[Create bot]");
+  await app.waitFor("text:Message Claude Proxy");
 });
 
 test("the header menu clears a chat after asking", async () => {

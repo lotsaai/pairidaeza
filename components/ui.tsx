@@ -47,14 +47,21 @@ export function IconButton(props: {
 const buttonVariants = {
   primary: { box: "bg-primary active:bg-primary/80", label: "text-primary-foreground" },
   default: { box: "border border-border bg-background hover:bg-accent active:bg-accent", label: "text-foreground" },
+  secondary: { box: "bg-secondary active:bg-secondary/70", label: "text-secondary-foreground" },
+  destructive: { box: "bg-destructive active:bg-destructive/80", label: "text-primary-foreground" },
   ghost: { box: "hover:bg-accent active:bg-accent", label: "text-foreground" },
 } as const;
 
 /** A labeled button in one of the app's variants. */
-export function TextButton(props: { label: string; variant?: keyof typeof buttonVariants; onPress?: () => void }) {
+export function TextButton(props: { label: string; variant?: keyof typeof buttonVariants; onPress?: () => void; disabled?: boolean; accessibilityLabel?: string }) {
   const variant = () => buttonVariants[props.variant ?? "default"];
   return (
-    <Button onPress={props.onPress} class={`min-h-8 items-center justify-center rounded-full px-4 py-1.5 ${variant().box}`}>
+    <Button
+      accessibilityLabel={props.accessibilityLabel}
+      disabled={props.disabled}
+      onPress={props.onPress}
+      class={`min-h-8 items-center justify-center rounded-full px-4 py-1.5 disabled:opacity-40 ${variant().box}`}
+    >
       <Text class={`text-sm font-medium ${variant().label}`}>{props.label}</Text>
     </Button>
   );

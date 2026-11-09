@@ -4,11 +4,11 @@ import { createNavStack } from "nsh/base";
 import { markOpened } from "./store";
 
 export type Route =
-  | { name: "chats" }
-  | { name: "chat"; id: string }
-  | { name: "bot"; id: string }
-  | { name: "new-group" }
-  | { name: "artifacts" };
+ | { name: "chats" }
+ | { name: "chat"; id: string }
+ | { name: "bot"; id: string }
+ | { name: "new-group" }
+ | { name: "artifacts" };
 
 export type PanelTab = "settings" | "routines" | "pages" | "computer";
 
@@ -28,31 +28,31 @@ export const mainView = signal<"chat" | "artifacts">("chat");
 
 /** Opens a chat: selects it beside the sidebar, or pushes it on a phone. Opening it reads it. */
 export function openChat(id: string) {
-  selectedChatId.set(id);
-  mainView.set("chat");
-  markOpened(id);
-  if (!wide()) nav.push({ name: "chat", id });
+ selectedChatId.set(id);
+ mainView.set("chat");
+ markOpened(id);
+ if (!wide()) nav.push({ name: "chat", id });
 }
 
 /** The Artifacts page: in the main pane on wide windows, pushed on a phone. */
 export function openArtifacts() {
-  if (wide()) mainView.set("artifacts");
-  else nav.push({ name: "artifacts" });
+ if (wide()) mainView.set("artifacts");
+ else nav.push({ name: "artifacts" });
 }
 
 /** A signal kept in the app's storage across launches (JSON); writes start once the saved value has loaded. */
 export function persisted<T>(key: string, initial: T): Signal<T> {
-  const value = signal<T>(initial);
-  const loaded = signal(false);
-  void Storage.getItem(key).then((saved) => {
-    if (saved !== null) value.set(JSON.parse(saved) as T);
-    loaded.set(true);
-  });
-  effect(() => {
-    const v = value();
-    if (loaded()) void Storage.setItem(key, JSON.stringify(v));
-  });
-  return value;
+ const value = signal<T>(initial);
+ const loaded = signal(false);
+ void Storage.getItem(key).then((saved) => {
+  if (saved !== null) value.set(JSON.parse(saved) as T);
+  loaded.set(true);
+ });
+ effect(() => {
+  const v = value();
+  if (loaded()) void Storage.setItem(key, JSON.stringify(v));
+ });
+ return value;
 }
 
 export type SidebarDensity = "comfortable" | "compact";
@@ -73,23 +73,35 @@ export const panelPageId = signal<string | null>(null);
 
 /** Shows a bot's details: beside the chat on wide windows, as a page on phones. */
 export function openBotDetails(botId: string, tab: PanelTab = "settings") {
-  panelTab.set(tab);
-  panelRoutineId.set(null);
-  panelPageId.set(null);
-  panelBotId.set(botId);
-  if (!wide()) nav.push({ name: "bot", id: botId });
+ panelTab.set(tab);
+ panelRoutineId.set(null);
+ panelPageId.set(null);
+ panelBotId.set(botId);
+ if (!wide()) nav.push({ name: "bot", id: botId });
 }
 
-export type SettingsRoute = { name: "root" } | { name: "general" } | { name: "approvals" } | { name: "models" } | { name: "apps" };
+export type SettingsSection =
+ | "general"
+ | "organization"
+ | "models"
+ | "voice"
+ | "approvals"
+ | "vault"
+ | "memory"
+ | "usage"
+ | "computer"
+ | "updates";
+export type SettingsRoute = { name: "root" } | { name: SettingsSection };
 
-/** Settings is its own stack in a modal: a list of sections, each a page. */
+/** Settings takes over the window with its own stack: on phones a list of sections, each pushed as a page;
+ * on wide windows the sections beside the one shown, which is the stack's top (General at the root). */
 export const settingsNav = createNavStack<SettingsRoute>([{ name: "root" }]);
 export const settingsOpen = signal(false);
 
-/** Opens settings at its list, or straight at one section. */
-export function openSettings(section?: Exclude<SettingsRoute, { name: "root" }>) {
-  settingsNav.setRoutes(section ? [{ name: "root" }, section] : [{ name: "root" }]);
-  settingsOpen.set(true);
+/** Opens settings at its list (General beside it on wide windows), or straight at one section. */
+export function openSettings(section?: SettingsSection) {
+ settingsNav.setRoutes(section ? [{ name: "root" }, { name: section }] : [{ name: "root" }]);
+ settingsOpen.set(true);
 }
 
 export const searchOpen = signal(false);
@@ -97,14 +109,15 @@ export const newBotOpen = signal(false);
 /** The new group chat form: in the bot panel's place on wide windows, a page on phones. */
 export const newGroupOpen = signal(false);
 export function openNewGroup() {
-  panelBotId.set(null);
-  newGroupOpen.set(true);
-  if (!wide()) nav.push({ name: "new-group" });
+ panelBotId.set(null);
+ newGroupOpen.set(true);
+ if (!wide()) nav.push({ name: "new-group" });
 }
 export const newSpaceOpen = signal(false);
 /** The space whose settings are open, or null. */
 export const spaceSettingsId = signal<string | null>(null);
 export const skillsOpen = signal(false);
+export const integrationsOpen = signal(false);
 export const inviteOpen = signal(false);
 export const mobileAppOpen = signal(false);
 
@@ -114,8 +127,8 @@ export const sectionDialog = signal<{ id: string | null; chatId?: string } | nul
 export const sectionName = signal("");
 
 export function nameSection(edit: { id: string | null; chatId?: string }, name = "") {
-  sectionName.set(name);
-  sectionDialog.set(edit);
+ sectionName.set(name);
+ sectionDialog.set(edit);
 }
 
 // Sidebar slice (ChatList): the rail, its width and the live width while the edge is dragged.
@@ -137,6 +150,6 @@ export const sidebarRail = () => wide() && (sidebarDragWidth() !== null ? sideba
 
 /** The sidebar's width on wide windows, drag included. */
 export const sidebarShownWidth = () => {
-  if (sidebarRail()) return SIDEBAR_RAIL_WIDTH;
-  return clampSidebarWidth(sidebarDragWidth() ?? sidebarWidth());
+ if (sidebarRail()) return SIDEBAR_RAIL_WIDTH;
+ return clampSidebarWidth(sidebarDragWidth() ?? sidebarWidth());
 };

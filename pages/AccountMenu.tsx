@@ -2,10 +2,9 @@
 import { openUrl, safeAreaInsets, Text, View } from "nsh";
 import { Button } from "nsh/base";
 import { AccountAvatar, AppMenu, Icon, MenuDivider, MenuRow } from "../components/ui";
-import { inviteOpen, mobileAppOpen, openArtifacts, openSettings, skillsOpen } from "../nav";
-import { activeOrganization, allApps, allOrganizations, currentAccount, docsUrl, signOut, switchOrganization } from "../store";
-
-const connectApps = () => openSettings({ name: "apps" });
+import { integrationsOpen, inviteOpen, mobileAppOpen, openArtifacts, openSettings, skillsOpen } from "../nav";
+import { activeOrganization, allOrganizations, currentAccount, docsUrl, signOut, switchOrganization } from "../store";
+import { connectedCount } from "./integrations/catalog";
 
 export function AccountMenu(props: { mini: boolean }) {
   const insets = safeAreaInsets();
@@ -34,7 +33,7 @@ export function AccountMenu(props: { mini: boolean }) {
             <If when={!props.mini}>
               <View class="min-w-0 flex-1">
                 <Text class="truncate text-sm font-medium text-sidebar-foreground">{currentAccount().name}</Text>
-                <Text class="truncate text-xs text-muted-foreground">{`${allApps().filter((a) => a.connected).length} apps connected`}</Text>
+                <Text class="truncate text-xs text-muted-foreground">{`${connectedCount()} apps connected`}</Text>
               </View>
             </If>
           </View>
@@ -60,7 +59,7 @@ export function AccountMenu(props: { mini: boolean }) {
           <MenuDivider />
         </If>
         <If when={props.mini}>
-          <MenuRow icon="plug" label="Connect apps" onSelect={connectApps} />
+          <MenuRow icon="plug" label="Connect apps" onSelect={() => integrationsOpen.set(true)} />
         </If>
         <MenuRow icon="settings" label="Settings" onSelect={() => openSettings()} />
         <MenuRow icon="scroll-text" label="Skills" onSelect={() => skillsOpen.set(true)} />
@@ -74,7 +73,7 @@ export function AccountMenu(props: { mini: boolean }) {
       </AppMenu>
       <If when={!props.mini}>
         <Button
-          onPress={connectApps}
+          onPress={() => integrationsOpen.set(true)}
           class="min-h-9 min-w-0 flex-1 flex-row items-center justify-between gap-2 rounded-full border border-border bg-sidebar-accent px-4 hover:bg-sidebar-accent/70 active:bg-sidebar-accent/70"
         >
           <Text class="truncate text-sm font-medium text-sidebar-foreground">Connect apps</Text>

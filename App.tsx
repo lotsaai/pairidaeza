@@ -18,6 +18,7 @@ import { InviteDialog, MobileAppDialog } from "./pages/AccountDialogs";
 import { ArtifactsPage } from "./pages/Artifacts";
 import { SignedOut } from "./pages/SignedOut";
 import { SkillsDialog } from "./pages/Skills";
+import { IntegrationsModal } from "./pages/Integrations";
 
 function App() {
   return (
@@ -94,6 +95,7 @@ function App() {
       <SpaceSettingsDialog />
       <NewGroupPanelSheet />
       <SkillsDialog />
+      <IntegrationsModal />
       <InviteDialog />
       <MobileAppDialog />
       <If when={!isSignedIn()}>

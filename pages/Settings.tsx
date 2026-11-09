@@ -1,43 +1,347 @@
-// Settings: a modal with its own navigation stack, a list of sections, each section a page.
-// A page sheet on iOS; on wider windows a panel at the right edge.
-import { type JSX, Scroll, Text, View } from "nsh";
-import { Dialog, Input, NavPage, NavStack } from "nsh/base";
-import { AccountAvatar, Choices, Field, fieldClass, IconButton, NavRow, SectionTitle, SwitchRow } from "../components/ui";
-import { settingsNav, settingsOpen, type SettingsRoute, sidebarDensity, wide } from "../nav";
+// Settings take over the window. Wide windows: the sections in a sidebar beside the one shown.
+// Phones: the sections as a list, each pushed as a page of the settings stack.
+import { type JSX, Scroll, signal, Text, View } from "nsh";
+import { AlertDialog, Button, Dialog, Input, NavPage, NavStack } from "nsh/base";
+import { SelectField, Segmented, SettingsGroup, SettingsRow, SwitchSetting } from "../components/settings";
+import { AccountAvatar, fieldClass, Icon, IconButton, type IconName, NavRow, TextButton } from "../components/ui";
+import { type SettingsSection, settingsNav, settingsOpen, sidebarDensity, wide } from "../nav";
 import {
-  allApps,
-  type ApprovalMode,
+  activeOrganization,
+  allOrganizations,
   type Appearance,
+  appVersion,
   currentAccount,
   currentAppearance,
-  currentApprovalMode,
-  currentDefaultModel,
-  models,
+  currentPreferences,
+  deleteOrganization,
   renameAccount,
-  setAppConnected,
+  renameOrganization,
   setAppearance,
-  setApprovalMode,
-  setDefaultModel,
+  setPreference,
+  signOut,
 } from "../store";
+import { ApprovalsSettings } from "./settings/Approvals";
+import { ComputerSettings } from "./settings/Computer";
+import { MemorySettings } from "./settings/Memory";
+import { ModelsSettings } from "./settings/Models";
+import { UsageSettings } from "./settings/Usage";
+import { VaultSettings } from "./settings/Vault";
+import { VoiceSettings } from "./settings/Voice";
 
-const approvalModes: { value: ApprovalMode; label: string; description: string }[] = [
-  { value: "never", label: "Never ask", description: "Runs every action without waiting." },
-  { value: "auto", label: "Auto", description: "Asks only when an action is off-task or can't be undone." },
-  { value: "ask", label: "Ask", description: "Asks before any action that changes something." },
+/** The sections in nav order, with the line under a page's title where the name alone doesn't say what it is for. */
+const sections: { id: SettingsSection; label: string; icon: IconName; description?: string }[] = [
+  { id: "general", label: "General", icon: "settings" },
+  { id: "organization", label: "Organization", icon: "building-2" },
+  { id: "models", label: "Models", icon: "cpu", description: "Which LLMs your bots use." },
+  { id: "voice", label: "Voice", icon: "volume-2", description: "Calls, dictation, and replies read aloud." },
+  { id: "approvals", label: "Approvals", icon: "shield-check", description: "When bots check with you before acting." },
+  { id: "vault", label: "Vault", icon: "key-round", description: "Logins and keys your bots can use." },
+  { id: "memory", label: "Memory", icon: "brain", description: "What your bots remember between chats." },
+  { id: "usage", label: "Usage", icon: "gauge" },
+  { id: "computer", label: "Computer", icon: "monitor" },
+  { id: "updates", label: "Updates", icon: "cloud-download" },
 ];
+const sectionOf = (id: SettingsSection) => sections.find((s) => s.id === id)!;
+
+/** The section shown: the stack's top, General while at its root (wide windows show a page there). */
+const shown = (): SettingsSection => {
+  const top = settingsNav.routes().at(-1)!;
+  return top.name === "root" ? "general" : top.name;
+};
+const show = (id: SettingsSection) => settingsNav.setRoutes([{ name: "root" }, { name: id }]);
+const close = () => settingsOpen.set(false);
+
+async function confirm(title: string, description: string, verb: string) {
+  const { action } = await AlertDialog.show({
+    title,
+    description,
+    actions: [
+      { label: "Cancel", role: "cancel", id: "cancel" },
+      { label: verb, role: "destructive", id: "yes" },
+    ],
+  });
+  return action === "yes";
+}
+
+/** Import and export need the server, which this build does not talk to. */
+const needsServer = (title: string) =>
+  void AlertDialog.show({ title, description: "This needs the server, which this preview doesn't connect to.", actions: [{ label: "OK", role: "cancel", id: "ok" }] });
 
 const appearances: { value: Appearance; label: string }[] = [
   { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
 ];
-const densities = [
-  { value: "comfortable" as const, label: "Comfortable", description: "Shows previews and times." },
-  { value: "compact" as const, label: "Compact", description: "Shows a status line only." },
+const languages = [
+  { value: "en", title: "English" },
+  { value: "de", title: "Deutsch" },
+  { value: "es", title: "Español" },
+  { value: "fr", title: "Français" },
+  { value: "ja", title: "日本語" },
+  { value: "zh-CN", title: "简体中文" },
 ];
-const close = () => settingsOpen.set(false);
+const timezones = ["America/Los_Angeles", "America/New_York", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"].map((tz) => ({
+  value: tz,
+  title: tz.replace("_", " "),
+}));
 
-/** The header desktops and the web draw; iOS and Android show the system's from `title`. */
+function Account() {
+  const draft = signal<string | null>(null);
+  const save = () => {
+    const name = draft()?.trim();
+    if (name) renameAccount(name);
+    draft.set(null);
+  };
+  return (
+    <SettingsGroup title="Account">
+      <If
+        when={draft() !== null}
+        else={
+          <SettingsRow
+            first
+            label={currentAccount().name}
+            detail={currentAccount().email}
+            control={<TextButton label="Edit" variant="ghost" onPress={() => draft.set(currentAccount().name)} />}
+          />
+        }
+      >
+        <View class="gap-3 p-4">
+          <Text class="text-sm font-medium text-foreground">Name</Text>
+          <Input value={draft() ?? ""} onChange={({ value }) => draft.set(value)} onSubmit={save} maxLength={80} class={fieldClass} />
+          <View class="flex-row gap-2">
+            <TextButton label="Save" variant="primary" onPress={save} />
+            <TextButton label="Cancel" variant="ghost" onPress={() => draft.set(null)} />
+          </View>
+        </View>
+      </If>
+    </SettingsGroup>
+  );
+}
+
+function Password() {
+  const editing = signal(false);
+  const next = signal("");
+  const again = signal("");
+  const note = signal<string | null>(null);
+  const save = () => {
+    if (next().length < 8) return note.set("Use at least 8 characters");
+    if (next() !== again()) return note.set("Passwords do not match");
+    editing.set(false);
+    next.set("");
+    again.set("");
+    note.set("Password updated");
+  };
+  return (
+    <SettingsRow first label="Password" detail={editing() ? undefined : (note() ?? undefined)} control={editing() ? undefined : <TextButton label="Change password" variant="ghost" onPress={() => (note.set(null), editing.set(true))} />}>
+      <If when={editing()}>
+        <View class="gap-3">
+          <Input value={next()} onChange={({ value }) => next.set(value)} masked autoComplete="new-password" placeholder="New password" class={fieldClass} />
+          <Input value={again()} onChange={({ value }) => again.set(value)} onSubmit={save} masked autoComplete="new-password" placeholder="Confirm password" class={fieldClass} />
+          <If when={note()}>{(n) => <Text class="text-sm text-destructive">{n()}</Text>}</If>
+          <View class="flex-row gap-2">
+            <TextButton label="Save" variant="primary" onPress={save} />
+            <TextButton label="Cancel" variant="ghost" onPress={() => (note.set(null), editing.set(false))} />
+          </View>
+        </View>
+      </If>
+    </SettingsRow>
+  );
+}
+
+function General() {
+  const p = currentPreferences;
+  return (
+    <>
+      <Account />
+      <SettingsGroup title="Preferences">
+        <SettingsRow first label="Appearance" control={<Segmented options={appearances} value={currentAppearance()} onChange={setAppearance} />} />
+        <SettingsRow
+          label="Bot style"
+          control={
+            <Segmented
+              options={[
+                { value: "original", label: "Original" },
+                { value: "pairidaeza", label: "Pairidaeza" },
+              ]}
+              value={p().botStyle}
+              onChange={(v) => setPreference("botStyle", v)}
+            />
+          }
+        />
+        <SettingsRow
+          label="Sidebar density"
+          control={
+            <Segmented
+              options={[
+                { value: "comfortable", label: "Comfortable" },
+                { value: "compact", label: "Compact" },
+              ]}
+              value={sidebarDensity()}
+              onChange={(v) => sidebarDensity.set(v)}
+            />
+          }
+        />
+        <SettingsRow label="Language" control={<SelectField label="Language" items={languages} value={p().language} onChange={(v) => setPreference("language", v)} />} />
+        <SettingsRow label="Timezone" control={<SelectField label="Timezone" searchable items={timezones} value={p().timezone} onChange={(v) => setPreference("timezone", v)} />} />
+      </SettingsGroup>
+      <SettingsGroup title="Chat">
+        <SwitchSetting first label="Send with Enter" checked={p().sendWithEnter} onChange={(on) => setPreference("sendWithEnter", on)} />
+        <SwitchSetting label="Stream replies" checked={p().streamReplies} onChange={(on) => setPreference("streamReplies", on)} />
+        <SwitchSetting label="Show tool activity" checked={p().showToolActivity} onChange={(on) => setPreference("showToolActivity", on)} />
+        <SwitchSetting label="Load web images automatically" checked={p().loadWebImages} onChange={(on) => setPreference("loadWebImages", on)} />
+      </SettingsGroup>
+      <SettingsGroup title="Computers">
+        <SwitchSetting first label="Let bots use this computer" checked={p().letBotsUseComputer} onChange={(on) => setPreference("letBotsUseComputer", on)} />
+      </SettingsGroup>
+      <SettingsGroup title="Security">
+        <Password />
+      </SettingsGroup>
+      <SettingsGroup title="Data">
+        <SettingsRow
+          first
+          label="Your data"
+          control={
+            <>
+              <TextButton label="Export data" variant="ghost" onPress={() => needsServer("Export data")} />
+              <TextButton label="Import data" variant="ghost" onPress={() => needsServer("Import data")} />
+            </>
+          }
+        />
+        <SettingsRow label="Agent from another app" control={<TextButton label="Import an agent" variant="ghost" onPress={() => needsServer("Import an agent")} />} />
+        <SettingsRow
+          label="Delete account"
+          control={
+            <Button
+              accessibilityLabel="Delete account"
+              onPress={async () => (await confirm("Delete your account?", "Your bots, chats and data are deleted. This cannot be undone.", "Delete")) && signOut()}
+              class="min-h-8 items-center justify-center rounded-full px-4 py-1.5 hover:bg-accent active:bg-accent"
+            >
+              <Text class="text-sm font-medium text-destructive">Delete</Text>
+            </Button>
+          }
+        />
+      </SettingsGroup>
+    </>
+  );
+}
+
+function Organization() {
+  const org = () => allOrganizations().find((o) => o.id === activeOrganization())!;
+  const only = () => allOrganizations().length < 2;
+  return (
+    <>
+      <SettingsGroup title="Organization">
+        <SettingsRow
+          first
+          label="Name"
+          control={<Input value={org().name} onChange={({ value }) => value.trim() && renameOrganization(org().id, value)} maxLength={80} accessibilityLabel="Organization name" class={`${fieldClass} w-56`} />}
+        />
+      </SettingsGroup>
+      <SettingsGroup>
+        <SettingsRow
+          first
+          label="Delete organization"
+          detail={only() ? "Your only organization can't be deleted." : "This cannot be undone."}
+          control={
+            <Button
+              accessibilityLabel="Delete organization"
+              disabled={only()}
+              onPress={async () => (await confirm(`Delete ${org().name}?`, "This cannot be undone.", "Delete")) && deleteOrganization(org().id)}
+              class="min-h-8 items-center justify-center rounded-full px-4 py-1.5 hover:bg-accent active:bg-accent disabled:opacity-40"
+            >
+              <Text class="text-sm font-medium text-destructive">Delete</Text>
+            </Button>
+          }
+        />
+      </SettingsGroup>
+    </>
+  );
+}
+
+
+function Updates() {
+  const checked = signal(false);
+  return (
+    <SettingsGroup title="Pairidaeza">
+      <SettingsRow
+        first
+        label={`Version ${appVersion}`}
+        detail={checked() ? "You're up to date." : undefined}
+        control={<TextButton label="Check for updates" variant="ghost" onPress={() => checked.set(true)} />}
+      />
+      <SwitchSetting label="Install updates automatically" checked={currentPreferences().autoUpdate} onChange={(on) => setPreference("autoUpdate", on)} />
+    </SettingsGroup>
+  );
+}
+
+const pages: Record<SettingsSection, () => JSX.Element> = {
+  general: General,
+  organization: Organization,
+  models: ModelsSettings,
+  voice: VoiceSettings,
+  approvals: ApprovalsSettings,
+  vault: VaultSettings,
+  memory: MemorySettings,
+  usage: UsageSettings,
+  computer: ComputerSettings,
+  updates: Updates,
+};
+
+function Body(props: { id: SettingsSection }) {
+  const Page = pages[props.id];
+  return (
+    <View class="w-full max-w-2xl gap-8">
+      <Page />
+    </View>
+  );
+}
+
+/** Wide windows: the sections down the side, the shown one's title, its line and the close button above it. */
+function Wide() {
+  const section = () => sectionOf(shown());
+  return (
+    <View class="flex-1 flex-row">
+      <View class="w-60 gap-1 border-e border-sidebar-border bg-sidebar px-3 pt-12 pb-4" role="navigation" accessibilityLabel="Settings">
+        <Text role="header" class="px-2.5 pb-3 text-lg font-semibold text-sidebar-foreground">
+          Settings
+        </Text>
+        <Each of={sections} key={(s) => s.id}>
+          {(s) => (
+            <Button
+              accessibilityLabel={s().label}
+              selected={shown() === s().id}
+              onPress={() => show(s().id)}
+              class="group min-h-9 flex-row items-center gap-2.5 rounded-lg px-2.5 hover:bg-sidebar-accent selected:bg-sidebar-accent"
+            >
+              <Icon name={s().icon} size={16} tone={shown() === s().id ? "foreground" : "muted-foreground"} />
+              <Text class="text-muted-foreground group-selected:font-medium group-selected:text-foreground">{s().label}</Text>
+            </Button>
+          )}
+        </Each>
+      </View>
+      <View class="min-w-0 flex-1">
+        <View class="flex-row items-start gap-4 border-b border-border px-8 pt-12 pb-5">
+          <View class="min-w-0 flex-1 gap-1">
+            <Text role="header" class="text-xl font-medium text-foreground">
+              {section().label}
+            </Text>
+            <If when={section().description}>{(d) => <Text class="text-muted-foreground">{d()}</Text>}</If>
+          </View>
+          <IconButton icon="x" label="Close settings" onPress={close} />
+        </View>
+        <Each of={[shown()]} key={(id) => id}>
+          {(id) => (
+            <Scroll class="flex-1" contentClass="px-8 py-6">
+              <Body id={id()} />
+            </Scroll>
+          )}
+        </Each>
+      </View>
+    </View>
+  );
+}
+
+/** The header desktops and the web draw on phone-sized windows; iOS and Android show the system's from `title`. */
 function Header(props: { title: string }) {
   return (
     <View class="h-14 flex-row items-center gap-2 border-b border-border px-3">
@@ -46,7 +350,7 @@ function Header(props: { title: string }) {
           <IconButton icon="chevron-left" label="Back" onPress={() => settingsNav.pop()} />
         </If>
       </View>
-      <Text role="header" class="flex-1 text-center font-semibold text-popover-foreground">
+      <Text role="header" class="flex-1 text-center font-semibold text-foreground">
         {props.title}
       </Text>
       <IconButton icon="x" label="Close settings" onPress={close} />
@@ -56,7 +360,7 @@ function Header(props: { title: string }) {
 
 function Page(props: { title: string; children: JSX.Element }) {
   return (
-    <NavPage title={props.title} header={<Header title={props.title} />} class="bg-popover">
+    <NavPage title={props.title} header={<Header title={props.title} />} class="bg-background">
       <Scroll class="flex-1" contentClass="gap-6 p-4 pb-[env(safe-area-inset-bottom)]">
         {props.children}
       </Scroll>
@@ -65,10 +369,6 @@ function Page(props: { title: string; children: JSX.Element }) {
 }
 
 function Root() {
-  const label = (list: { value: string; label?: string; title?: string }[], value: string) => {
-    const found = list.find((o) => o.value === value);
-    return found?.label ?? found?.title ?? "";
-  };
   return (
     <Page title="Settings">
       <View class="flex-row items-center gap-3 px-1">
@@ -79,101 +379,30 @@ function Root() {
         </View>
       </View>
       <View class="gap-1">
-        <NavRow
-          icon="sun-moon"
-          label="General"
-          value={label(appearances, currentAppearance())}
-          onPress={() => settingsNav.push({ name: "general" })}
-        />
-        <NavRow
-          icon="shield-check"
-          label="Approvals"
-          value={label(approvalModes, currentApprovalMode())}
-          onPress={() => settingsNav.push({ name: "approvals" })}
-        />
-        <NavRow
-          icon="sparkles"
-          label="Models"
-          value={label(models, currentDefaultModel())}
-          onPress={() => settingsNav.push({ name: "models" })}
-        />
-        <NavRow
-          icon="plug"
-          label="Connected apps"
-          value={`${allApps().filter((a) => a.connected).length} connected`}
-          onPress={() => settingsNav.push({ name: "apps" })}
-        />
-      </View>
-    </Page>
-  );
-}
-
-function General() {
-  return (
-    <Page title="General">
-      <Field label="Name">
-        <Input value={currentAccount().name} onChange={({ value }) => value.trim() && renameAccount(value)} class={fieldClass} />
-      </Field>
-      <View class="gap-2">
-        <SectionTitle>Appearance</SectionTitle>
-        <Choices options={appearances} value={currentAppearance()} onChange={setAppearance} />
-      </View>
-      <View class="gap-2">
-        <SectionTitle>Sidebar density</SectionTitle>
-        <Choices options={densities} value={sidebarDensity()} onChange={(v) => sidebarDensity.set(v)} />
-      </View>
-    </Page>
-  );
-}
-
-function Approvals() {
-  return (
-    <Page title="Approvals">
-      <Text class="px-1 text-sm text-muted-foreground">When bots stop to ask before acting. Every space follows this.</Text>
-      <Choices options={approvalModes} value={currentApprovalMode()} onChange={setApprovalMode} />
-    </Page>
-  );
-}
-
-function Models() {
-  return (
-    <Page title="Models">
-      <Text class="px-1 text-sm text-muted-foreground">Bots set to "Account default" run on this model.</Text>
-      <Choices
-        options={models.filter((m) => m.value !== "default").map((m) => ({ value: m.value, label: m.title }))}
-        value={currentDefaultModel()}
-        onChange={setDefaultModel}
-      />
-    </Page>
-  );
-}
-
-function Apps() {
-  return (
-    <Page title="Connected apps">
-      <Text class="px-1 text-sm text-muted-foreground">Bots can read and act in connected apps, within your approval mode.</Text>
-      <View class="gap-4">
-        <Each of={allApps()} key={(a) => a.id}>
-          {(app) => <SwitchRow label={app().name} checked={app().connected} onChange={(on) => setAppConnected(app().id, on)} />}
+        <Each of={sections} key={(s) => s.id}>
+          {(s) => <NavRow icon={s().icon} label={s().label} onPress={() => settingsNav.push({ name: s().id })} />}
         </Each>
       </View>
     </Page>
   );
 }
 
-function route(r: SettingsRoute) {
-  switch (r.name) {
-    case "root":
-      return <Root />;
-    case "general":
-      return <General />;
-    case "approvals":
-      return <Approvals />;
-    case "models":
-      return <Models />;
-    case "apps":
-      return <Apps />;
-  }
+/** Phones: the list, each section pushed as a page with a way back. */
+function Narrow() {
+  return (
+    <NavStack state={settingsNav} class="flex-1">
+      {(route) => {
+        if (route.name === "root") return <Root />;
+        const section = sectionOf(route.name);
+        return (
+          <Page title={section.label}>
+            <If when={section.description}>{(d) => <Text class="px-1 text-sm text-muted-foreground">{d()}</Text>}</If>
+            <Body id={section.id} />
+          </Page>
+        );
+      }}
+    </NavStack>
+  );
 }
 
 export function SettingsModal() {
@@ -181,14 +410,14 @@ export function SettingsModal() {
     <Dialog
       open={settingsOpen()}
       onOpenChange={({ open }) => settingsOpen.set(open)}
-      presentation="pageSheet"
-      backdropClass="bg-overlay"
-      class={wide() ? "ms-auto h-full w-full max-w-md overflow-hidden border-l border-border bg-popover shadow-lg" : "flex-1 bg-popover"}
+      animation="fade"
+      presentation="fullScreen"
+      class="flex-1 bg-background"
       testID="settings"
     >
-      <NavStack state={settingsNav} class="flex-1">
-        {route}
-      </NavStack>
+      <If when={wide()} else={<Narrow />}>
+        <Wide />
+      </If>
     </Dialog>
   );
 }

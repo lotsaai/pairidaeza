@@ -125,12 +125,6 @@ export interface Run {
 
 export type Appearance = "system" | "light" | "dark";
 
-export interface App {
-  id: string;
-  name: string;
-  connected: boolean;
-}
-
 export type ApprovalStatus = "pending" | "allowed" | "denied";
 export type ApprovalMode = "never" | "auto" | "ask";
 
@@ -427,14 +421,35 @@ const account = signal({ name: me.name, email: me.email });
 const appearance = signal<Appearance>("system");
 const defaultModel = signal("balanced");
 
-const apps = signal<App[]>([
-  { id: "gmail", name: "Gmail", connected: true },
-  { id: "calendar", name: "Google Calendar", connected: true },
-  { id: "github", name: "GitHub", connected: true },
-  { id: "slack", name: "Slack", connected: false },
-  { id: "notion", name: "Notion", connected: false },
-  { id: "linear", name: "Linear", connected: false },
-]);
+/** The account's preferences beyond appearance: one record so Settings reads and writes them alike. */
+export interface Preferences {
+  botStyle: "original" | "pairidaeza";
+  language: string;
+  timezone: string;
+  sendWithEnter: boolean;
+  streamReplies: boolean;
+  showToolActivity: boolean;
+  loadWebImages: boolean;
+  letBotsUseComputer: boolean;
+  autoUpdate: boolean;
+}
+const preferences = signal<Preferences>({
+  botStyle: "original",
+  language: "en",
+  timezone: "America/Los_Angeles",
+  sendWithEnter: true,
+  streamReplies: false,
+  showToolActivity: true,
+  loadWebImages: false,
+  letBotsUseComputer: true,
+  autoUpdate: true,
+});
+export const currentPreferences = () => preferences();
+export function setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]) {
+  preferences.update((p) => ({ ...p, [key]: value }));
+}
+
+export const appVersion = "0.8.0";
 
 const messages = signal<Record<string, Message[]>>({
   chief: [
@@ -719,6 +734,15 @@ export function deleteArtifact(id: string) {
 export const allOrganizations = () => organizations();
 export const activeOrganization = () => activeOrganizationId();
 export const switchOrganization = (id: string) => activeOrganizationId.set(id);
+export function renameOrganization(id: string, name: string) {
+  organizations.update((all) => all.map((o) => (o.id === id ? { ...o, name: name.trim() } : o)));
+}
+/** Deletes an organization other than the last; the active one moves to the first left. */
+export function deleteOrganization(id: string) {
+  if (organizations().length < 2) return;
+  organizations.update((all) => all.filter((o) => o.id !== id));
+  if (activeOrganizationId() === id) activeOrganizationId.set(organizations()[0].id);
+}
 
 /** The user's invite link: a friend who signs up with it gets a longer trial (placeholder URL). */
 export const referral = { url: "https://pairidaeza.example/sign-up?ref=ALEX42", trialWeeks: 2 };
@@ -780,9 +804,6 @@ export const routineById = (id: string) => routines().find((r) => r.id === id);
 
 /** A bot's pages (tracked where read). */
 export const pagesOf = (botId: string) => pages().filter((p) => p.botId === botId);
-
-/** Apps the account can connect (tracked where read). */
-export const allApps = () => apps();
 
 /** Every bot (tracked where read). */
 export const allBots = () => bots();
@@ -850,11 +871,6 @@ export function runRoutine(id: string) {
     botId: routine.botId,
     markdown: `ran **${routine.name}**. results are in the thread notes.`,
   });
-}
-
-/** Connects or disconnects an app. */
-export function setAppConnected(id: string, connected: boolean) {
-  apps.update((all) => all.map((a) => (a.id === id ? { ...a, connected } : a)));
 }
 
 function append(chatId: string, message: Message) {
