@@ -45,7 +45,13 @@ function AddMenu() {
       <MenuRow icon="download" label="From GitHub" onSelect={() => go({ name: "github" })} />
       <MenuDivider />
       <Each of={sourceChoices} key={(c) => c.label}>
-        {(choice) => <MenuRow icon={choice().kind === "mcp" ? "plug" : "file-text"} label={choice().label} onSelect={() => beginSource(choice().kind, choice().preset)} />}
+        {(choice) => (
+          <MenuRow
+            icon={choice().kind === "mcp" ? "plug" : "file-text"}
+            label={choice().label}
+            onSelect={() => beginSource(choice().kind, choice().preset)}
+          />
+        )}
       </Each>
       <MenuDivider />
       <MenuRow icon="search" label="Browse MCP servers" onSelect={() => openMcpBrowse()} />
@@ -57,12 +63,18 @@ function AddMenu() {
 /** The connected apps' first letters, overlapping, then how many are connected. */
 function ConnectedButton() {
   return (
-    <Button accessibilityLabel={`${connectedCount()} connected`} onPress={showManage} class="min-h-9 flex-row items-center gap-2.5 rounded-full px-2.5 hover:bg-accent">
+    <Button
+      accessibilityLabel={`${connectedCount()} connected`}
+      onPress={showManage}
+      class="min-h-9 flex-row items-center gap-2.5 rounded-full px-2.5 hover:bg-accent"
+    >
       <If when={wide()}>
         <View class="flex-row">
           <Each of={connectedMarks()} key={(name) => name}>
             {(name, index) => (
-              <View class={`size-6 items-center justify-center rounded-lg border-2 border-background bg-muted ${index() > 0 ? "-ms-1.5" : ""}`}>
+              <View
+                class={`size-6 items-center justify-center rounded-lg border-2 border-background bg-muted ${index() > 0 ? "-ms-1.5" : ""}`}
+              >
                 <Text class="text-xs font-semibold text-foreground">{name().slice(0, 1).toUpperCase()}</Text>
               </View>
             )}
@@ -77,7 +89,13 @@ function ConnectedButton() {
 
 function Header(props: { route: Route }) {
   return (
-    <View class={wide() ? "flex-row items-center gap-3 border-b border-border px-8 pt-12 pb-5" : "h-14 flex-row items-center gap-2 border-b border-border px-3"}>
+    <View
+      class={
+        wide()
+          ? "flex-row items-center gap-3 border-b border-border px-8 pt-12 pb-5"
+          : "h-14 flex-row items-center gap-2 border-b border-border px-3"
+      }
+    >
       <If when={props.route.name !== "browse"}>
         <IconButton icon="chevron-left" label="Back" onPress={() => stack.pop()} />
       </If>
@@ -85,7 +103,11 @@ function Header(props: { route: Route }) {
         {titleOf(props.route)}
       </Text>
       <If when={props.route.name === "browse"}>
-        <Button accessibilityLabel="Templates" onPress={() => go({ name: "templates" })} class="min-h-9 flex-row items-center rounded-full px-3 hover:bg-accent">
+        <Button
+          accessibilityLabel="Templates"
+          onPress={() => go({ name: "templates" })}
+          class="min-h-9 flex-row items-center rounded-full px-3 hover:bg-accent"
+        >
           <Text class="text-sm text-foreground">Templates</Text>
         </Button>
       </If>

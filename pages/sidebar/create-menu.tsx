@@ -40,7 +40,7 @@ function RowHint(props: { label: string }) {
   return (
     <View
       accessibilityLabel={props.label}
-      onPress={() => { }}
+      onPress={() => {}}
       tooltip={
         <Tooltip placement="right" class="max-w-60 rounded-md border border-border bg-popover px-2 py-1 shadow-md">
           <Text class="text-xs text-popover-foreground">{props.label}</Text>

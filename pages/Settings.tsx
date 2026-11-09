@@ -65,7 +65,11 @@ async function confirm(title: string, description: string, verb: string) {
 
 /** Import and export need the server, which this build does not talk to. */
 const needsServer = (title: string) =>
-  void AlertDialog.show({ title, description: "This needs the server, which this preview doesn't connect to.", actions: [{ label: "OK", role: "cancel", id: "ok" }] });
+  void AlertDialog.show({
+    title,
+    description: "This needs the server, which this preview doesn't connect to.",
+    actions: [{ label: "OK", role: "cancel", id: "ok" }],
+  });
 
 const appearances: { value: Appearance; label: string }[] = [
   { value: "system", label: "System" },
@@ -80,10 +84,12 @@ const languages = [
   { value: "ja", title: "日本語" },
   { value: "zh-CN", title: "简体中文" },
 ];
-const timezones = ["America/Los_Angeles", "America/New_York", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"].map((tz) => ({
-  value: tz,
-  title: tz.replace("_", " "),
-}));
+const timezones = ["America/Los_Angeles", "America/New_York", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"].map(
+  (tz) => ({
+    value: tz,
+    title: tz.replace("_", " "),
+  }),
+);
 
 function Account() {
   const draft = signal<string | null>(null);
@@ -132,11 +138,33 @@ function Password() {
     note.set("Password updated");
   };
   return (
-    <SettingsRow first label="Password" detail={editing() ? undefined : (note() ?? undefined)} control={editing() ? undefined : <TextButton label="Change password" variant="ghost" onPress={() => (note.set(null), editing.set(true))} />}>
+    <SettingsRow
+      first
+      label="Password"
+      detail={editing() ? undefined : (note() ?? undefined)}
+      control={
+        editing() ? undefined : <TextButton label="Change password" variant="ghost" onPress={() => (note.set(null), editing.set(true))} />
+      }
+    >
       <If when={editing()}>
         <View class="gap-3">
-          <Input value={next()} onChange={({ value }) => next.set(value)} masked autoComplete="new-password" placeholder="New password" class={fieldClass} />
-          <Input value={again()} onChange={({ value }) => again.set(value)} onSubmit={save} masked autoComplete="new-password" placeholder="Confirm password" class={fieldClass} />
+          <Input
+            value={next()}
+            onChange={({ value }) => next.set(value)}
+            masked
+            autoComplete="new-password"
+            placeholder="New password"
+            class={fieldClass}
+          />
+          <Input
+            value={again()}
+            onChange={({ value }) => again.set(value)}
+            onSubmit={save}
+            masked
+            autoComplete="new-password"
+            placeholder="Confirm password"
+            class={fieldClass}
+          />
           <If when={note()}>{(n) => <Text class="text-sm text-destructive">{n()}</Text>}</If>
           <View class="flex-row gap-2">
             <TextButton label="Save" variant="primary" onPress={save} />
@@ -154,7 +182,11 @@ function General() {
     <>
       <Account />
       <SettingsGroup title="Preferences">
-        <SettingsRow first label="Appearance" control={<Segmented options={appearances} value={currentAppearance()} onChange={setAppearance} />} />
+        <SettingsRow
+          first
+          label="Appearance"
+          control={<Segmented options={appearances} value={currentAppearance()} onChange={setAppearance} />}
+        />
         <SettingsRow
           label="Bot style"
           control={
@@ -181,17 +213,40 @@ function General() {
             />
           }
         />
-        <SettingsRow label="Language" control={<SelectField label="Language" items={languages} value={p().language} onChange={(v) => setPreference("language", v)} />} />
-        <SettingsRow label="Timezone" control={<SelectField label="Timezone" searchable items={timezones} value={p().timezone} onChange={(v) => setPreference("timezone", v)} />} />
+        <SettingsRow
+          label="Language"
+          control={<SelectField label="Language" items={languages} value={p().language} onChange={(v) => setPreference("language", v)} />}
+        />
+        <SettingsRow
+          label="Timezone"
+          control={
+            <SelectField
+              label="Timezone"
+              searchable
+              items={timezones}
+              value={p().timezone}
+              onChange={(v) => setPreference("timezone", v)}
+            />
+          }
+        />
       </SettingsGroup>
       <SettingsGroup title="Chat">
         <SwitchSetting first label="Send with Enter" checked={p().sendWithEnter} onChange={(on) => setPreference("sendWithEnter", on)} />
         <SwitchSetting label="Stream replies" checked={p().streamReplies} onChange={(on) => setPreference("streamReplies", on)} />
         <SwitchSetting label="Show tool activity" checked={p().showToolActivity} onChange={(on) => setPreference("showToolActivity", on)} />
-        <SwitchSetting label="Load web images automatically" checked={p().loadWebImages} onChange={(on) => setPreference("loadWebImages", on)} />
+        <SwitchSetting
+          label="Load web images automatically"
+          checked={p().loadWebImages}
+          onChange={(on) => setPreference("loadWebImages", on)}
+        />
       </SettingsGroup>
       <SettingsGroup title="Computers">
-        <SwitchSetting first label="Let bots use this computer" checked={p().letBotsUseComputer} onChange={(on) => setPreference("letBotsUseComputer", on)} />
+        <SwitchSetting
+          first
+          label="Let bots use this computer"
+          checked={p().letBotsUseComputer}
+          onChange={(on) => setPreference("letBotsUseComputer", on)}
+        />
       </SettingsGroup>
       <SettingsGroup title="Security">
         <Password />
@@ -207,13 +262,19 @@ function General() {
             </>
           }
         />
-        <SettingsRow label="Agent from another app" control={<TextButton label="Import an agent" variant="ghost" onPress={() => needsServer("Import an agent")} />} />
+        <SettingsRow
+          label="Agent from another app"
+          control={<TextButton label="Import an agent" variant="ghost" onPress={() => needsServer("Import an agent")} />}
+        />
         <SettingsRow
           label="Delete account"
           control={
             <Button
               accessibilityLabel="Delete account"
-              onPress={async () => (await confirm("Delete your account?", "Your bots, chats and data are deleted. This cannot be undone.", "Delete")) && signOut()}
+              onPress={async () =>
+                (await confirm("Delete your account?", "Your bots, chats and data are deleted. This cannot be undone.", "Delete")) &&
+                signOut()
+              }
               class="min-h-8 items-center justify-center rounded-full px-4 py-1.5 hover:bg-accent active:bg-accent"
             >
               <Text class="text-sm font-medium text-destructive">Delete</Text>
@@ -234,7 +295,15 @@ function Organization() {
         <SettingsRow
           first
           label="Name"
-          control={<Input value={org().name} onChange={({ value }) => value.trim() && renameOrganization(org().id, value)} maxLength={80} accessibilityLabel="Organization name" class={`${fieldClass} w-56`} />}
+          control={
+            <Input
+              value={org().name}
+              onChange={({ value }) => value.trim() && renameOrganization(org().id, value)}
+              maxLength={80}
+              accessibilityLabel="Organization name"
+              class={`${fieldClass} w-56`}
+            />
+          }
         />
       </SettingsGroup>
       <SettingsGroup>
@@ -246,7 +315,9 @@ function Organization() {
             <Button
               accessibilityLabel="Delete organization"
               disabled={only()}
-              onPress={async () => (await confirm(`Delete ${org().name}?`, "This cannot be undone.", "Delete")) && deleteOrganization(org().id)}
+              onPress={async () =>
+                (await confirm(`Delete ${org().name}?`, "This cannot be undone.", "Delete")) && deleteOrganization(org().id)
+              }
               class="min-h-8 items-center justify-center rounded-full px-4 py-1.5 hover:bg-accent active:bg-accent disabled:opacity-40"
             >
               <Text class="text-sm font-medium text-destructive">Delete</Text>
@@ -258,7 +329,6 @@ function Organization() {
   );
 }
 
-
 function Updates() {
   const checked = signal(false);
   return (
@@ -269,7 +339,11 @@ function Updates() {
         detail={checked() ? "You're up to date." : undefined}
         control={<TextButton label="Check for updates" variant="ghost" onPress={() => checked.set(true)} />}
       />
-      <SwitchSetting label="Install updates automatically" checked={currentPreferences().autoUpdate} onChange={(on) => setPreference("autoUpdate", on)} />
+      <SwitchSetting
+        label="Install updates automatically"
+        checked={currentPreferences().autoUpdate}
+        onChange={(on) => setPreference("autoUpdate", on)}
+      />
     </SettingsGroup>
   );
 }

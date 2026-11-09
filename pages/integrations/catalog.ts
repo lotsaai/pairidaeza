@@ -2,7 +2,18 @@
 // catalogs and fixtures; what is connected is mock state that lives only in memory.
 import { batch, signal } from "nsh";
 
-export const PLUGIN_CATEGORIES = ["productivity", "communication", "sales", "marketing", "finance", "people", "design", "code", "data", "ops"] as const;
+export const PLUGIN_CATEGORIES = [
+  "productivity",
+  "communication",
+  "sales",
+  "marketing",
+  "finance",
+  "people",
+  "design",
+  "code",
+  "data",
+  "ops",
+] as const;
 export type PluginCategory = (typeof PLUGIN_CATEGORIES)[number];
 
 const categoryLabels: Record<PluginCategory, string> = {
@@ -27,11 +38,23 @@ export const apps: App[] = [
     id: "gmail",
     name: "Gmail",
     slug: "GMAIL",
-    tools: ["GMAIL_FETCH_EMAILS", "GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID", "GMAIL_FETCH_MESSAGE_BY_THREAD_ID", "GMAIL_SEND_EMAIL", "GMAIL_CREATE_EMAIL_DRAFT", "GMAIL_LIST_LABELS"],
+    tools: [
+      "GMAIL_FETCH_EMAILS",
+      "GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID",
+      "GMAIL_FETCH_MESSAGE_BY_THREAD_ID",
+      "GMAIL_SEND_EMAIL",
+      "GMAIL_CREATE_EMAIL_DRAFT",
+      "GMAIL_LIST_LABELS",
+    ],
   },
   { id: "google-calendar", name: "Google Calendar", slug: "GOOGLECALENDAR", tools: ["GOOGLECALENDAR_CREATE_EVENT"] },
   { id: "google-drive", name: "Google Drive", slug: "GOOGLEDRIVE", tools: [] },
-  { id: "slack", name: "Slack", slug: "SLACK", tools: ["SLACK_SEND_MESSAGE", "SLACK_LIST_CHANNELS", "SLACK_FIND_CHANNELS", "SLACK_FETCH_CONVERSATION_HISTORY"] },
+  {
+    id: "slack",
+    name: "Slack",
+    slug: "SLACK",
+    tools: ["SLACK_SEND_MESSAGE", "SLACK_LIST_CHANNELS", "SLACK_FIND_CHANNELS", "SLACK_FETCH_CONVERSATION_HISTORY"],
+  },
   { id: "notion", name: "Notion", slug: "NOTION", tools: ["NOTION_SEARCH"] },
   { id: "github", name: "GitHub", slug: "GITHUB", tools: ["GITHUB_LIST_RELEASES", "GITHUB_GET_RELEASE", "GITHUB_CREATE_AN_ISSUE"] },
   { id: "salesforce", name: "Salesforce", slug: "SALESFORCE", tools: [] },
@@ -84,12 +107,45 @@ export const plugins: Plugin[] = [
     ],
     servers: [{ name: "notes", endpoint: MARKETPLACE_FIXTURE_ENDPOINT }],
   },
-  { name: "calcom", displayName: "Calcom", description: "Scheduling", category: "productivity", source: "https://github.com/acme/plugins#calcom", skills: [], servers: [{ name: "Calcom" }] },
-  { name: "sentry", displayName: "Sentry", description: "Error monitoring", category: "ops", source: "https://github.com/acme/plugins#sentry", skills: [], servers: [{ name: "Sentry" }] },
+  {
+    name: "calcom",
+    displayName: "Calcom",
+    description: "Scheduling",
+    category: "productivity",
+    source: "https://github.com/acme/plugins#calcom",
+    skills: [],
+    servers: [{ name: "Calcom" }],
+  },
+  {
+    name: "sentry",
+    displayName: "Sentry",
+    description: "Error monitoring",
+    category: "ops",
+    source: "https://github.com/acme/plugins#sentry",
+    skills: [],
+    servers: [{ name: "Sentry" }],
+  },
 ];
 
 /** Brands people look for first, in order. */
-const RECOMMENDED = ["github", "stripe", "vercel", "figma", "hubspot", "salesforce", "sentry", "supabase", "calcom", "zoom", "datadog", "attio", "intercom", "cloudflare", "neon", "docusign"];
+const RECOMMENDED = [
+  "github",
+  "stripe",
+  "vercel",
+  "figma",
+  "hubspot",
+  "salesforce",
+  "sentry",
+  "supabase",
+  "calcom",
+  "zoom",
+  "datadog",
+  "attio",
+  "intercom",
+  "cloudflare",
+  "neon",
+  "docusign",
+];
 export const recommendedPlugins = () =>
   plugins
     .filter((p) => RECOMMENDED.includes(p.name))
@@ -113,7 +169,11 @@ export const searchMcp = (query: string) => {
   return mcpDirectory.filter((r) => r.name.toLowerCase().includes(needle));
 };
 
-const words = (text: string) => text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const words = (text: string) =>
+  text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
 
 /** Every query word starts a word of the text, or the text with its separators removed. */
 export function matchesWordPrefixes(text: string, query: string) {
@@ -123,7 +183,10 @@ export function matchesWordPrefixes(text: string, query: string) {
 }
 
 export const matchesPlugin = (p: Plugin, query: string) =>
-  matchesWordPrefixes([p.name, p.displayName, p.description, p.category ?? "", p.category ? categoryLabel(p.category) : ""].join(" "), query);
+  matchesWordPrefixes(
+    [p.name, p.displayName, p.description, p.category ?? "", p.category ? categoryLabel(p.category) : ""].join(" "),
+    query,
+  );
 
 /** Plugins the user previewed from a GitHub URL. */
 const previews = signal<Plugin[]>([]);
@@ -143,7 +206,11 @@ export function previewGithub(url: string): boolean {
       category: null,
       source,
       skills: [
-        { name: "imported-notes", description: "Keep imported notes", content: "---\nname: imported-notes\ndescription: Keep imported notes\n---\n\nRecord notes.\n" },
+        {
+          name: "imported-notes",
+          description: "Keep imported notes",
+          content: "---\nname: imported-notes\ndescription: Keep imported notes\n---\n\nRecord notes.\n",
+        },
       ],
       servers: [{ name: "notes", endpoint: MARKETPLACE_FIXTURE_ENDPOINT }],
     },
@@ -245,7 +312,8 @@ let nextId = 1;
 export function addServer(name: string, endpoint: string) {
   if (!servers().some((s) => s.endpoint === endpoint)) servers.update((all) => [...all, { id: `server${nextId++}`, name, endpoint }]);
 }
-export const addSource = (name: string, kind: SourceKind, url: string) => sources.update((all) => [...all, { id: `source${nextId++}`, name, kind, url }]);
+export const addSource = (name: string, kind: SourceKind, url: string) =>
+  sources.update((all) => [...all, { id: `source${nextId++}`, name, kind, url }]);
 export const removeSource = (id: string) => sources.update((all) => all.filter((s) => s.id !== id));
 
 /** Everything listed under "Your apps". */
@@ -253,4 +321,5 @@ export const appCount = () => connectedIds().length + servers().length + sources
 /** What the footer and the count button report: apps and sources in use, plugins once signed in. */
 export const connectedCount = () => connectedIds().length + servers().length + sources().length + readyInstalls().length;
 /** The first few connected apps, for the count button's marks. */
-export const connectedMarks = () => [...connectedIds().map((id) => appById(id)?.name ?? id), ...readyInstalls().map((c) => c.plugin.displayName)].slice(0, 4);
+export const connectedMarks = () =>
+  [...connectedIds().map((id) => appById(id)?.name ?? id), ...readyInstalls().map((c) => c.plugin.displayName)].slice(0, 4);

@@ -64,7 +64,11 @@ function AppsSection(props: { plugin: Plugin; botId: string | undefined }) {
                       when={!isAssigned(botId(), props.plugin.source, server().name)}
                       else={<Text class="text-sm text-muted-foreground">In this bot</Text>}
                     >
-                      <TextButton variant="secondary" label="Use in this bot" onPress={() => assign(botId(), props.plugin.source, server().name)} />
+                      <TextButton
+                        variant="secondary"
+                        label="Use in this bot"
+                        onPress={() => assign(botId(), props.plugin.source, server().name)}
+                      />
                     </If>
                   )}
                 </If>
@@ -140,19 +144,31 @@ function Body(props: { plugin: Plugin }) {
           <Text role="header" class="truncate text-xl font-semibold text-foreground">
             {props.plugin.displayName}
           </Text>
-          <Button accessibilityLabel="View source" onPress={() => void openUrl(sourceHref(props.plugin.source))} class="flex-row items-center gap-1">
+          <Button
+            accessibilityLabel="View source"
+            onPress={() => void openUrl(sourceHref(props.plugin.source))}
+            class="flex-row items-center gap-1"
+          >
             <Text class="text-muted-foreground">View source</Text>
             <Icon name="arrow-up-right" size={14} tone="muted-foreground" />
           </Button>
         </View>
         <If
           when={headerOn()}
-          else={<TextButton variant="primary" label={skillPack ? "Add" : "Connect"} onPress={() => setPart(props.plugin.source, headerPart, true)} />}
+          else={
+            <TextButton
+              variant="primary"
+              label={skillPack ? "Add" : "Connect"}
+              onPress={() => setPart(props.plugin.source, headerPart, true)}
+            />
+          }
         >
           <TextButton
             variant="secondary"
             label="Remove"
-            onPress={() => void confirmRemove(props.plugin.displayName).then((yes) => yes && setPart(props.plugin.source, headerPart, false))}
+            onPress={() =>
+              void confirmRemove(props.plugin.displayName).then((yes) => yes && setPart(props.plugin.source, headerPart, false))
+            }
           />
         </If>
       </View>

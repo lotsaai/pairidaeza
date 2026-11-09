@@ -51,7 +51,9 @@ export function Segmented<V extends string>(props: { options: { value: V; label:
             onChange={() => props.onChange(option().value)}
             class="group min-h-8 justify-center rounded-md px-3 hover:bg-accent aria-pressed:bg-background aria-pressed:shadow-sm"
           >
-            <Text class="text-sm text-muted-foreground group-aria-pressed:font-medium group-aria-pressed:text-foreground">{option().label}</Text>
+            <Text class="text-sm text-muted-foreground group-aria-pressed:font-medium group-aria-pressed:text-foreground">
+              {option().label}
+            </Text>
           </Toggle>
         )}
       </Each>
@@ -60,7 +62,13 @@ export function Segmented<V extends string>(props: { options: { value: V; label:
 }
 
 /** A value chosen from a list: a popup on desktops, a sheet on phones. */
-export function SelectField(props: { label: string; items: { value: string; title: string }[]; value: string; onChange: (value: string) => void; searchable?: boolean }) {
+export function SelectField(props: {
+  label: string;
+  items: { value: string; title: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  searchable?: boolean;
+}) {
   const title = () => props.items.find((i) => i.value === props.value)?.title ?? "";
   return (
     <Select
@@ -86,7 +94,13 @@ export function SelectField(props: { label: string; items: { value: string; titl
 }
 
 /** A setting that takes effect at once: its row's label names the switch. */
-export function SwitchSetting(props: { label: string; detail?: string; checked: boolean; onChange: (checked: boolean) => void; first?: boolean }) {
+export function SwitchSetting(props: {
+  label: string;
+  detail?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  first?: boolean;
+}) {
   return (
     <SettingsRow
       first={props.first}

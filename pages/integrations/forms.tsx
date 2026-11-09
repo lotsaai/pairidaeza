@@ -85,7 +85,13 @@ export function SourceForm(props: { kind: SourceKind; preset?: Preset }) {
   return (
     <View class="max-w-xl gap-4">
       <Field label="Name">
-        <Input accessibilityLabel="Name" value={sourceName()} onChange={({ value }) => sourceName.set(value)} autoFocus class={fieldClass} />
+        <Input
+          accessibilityLabel="Name"
+          value={sourceName()}
+          onChange={({ value }) => sourceName.set(value)}
+          autoFocus
+          class={fieldClass}
+        />
       </Field>
       <If when={!props.preset?.url}>
         <Field label="URL">
@@ -113,7 +119,13 @@ export function SourceForm(props: { kind: SourceKind; preset?: Preset }) {
       </If>
       <If when={!custom() || authType() !== "none"}>
         <Field label={props.preset ? "Bearer token" : "Credential"}>
-          <Input accessibilityLabel={props.preset ? "Bearer token" : "Credential"} masked value={credential()} onChange={({ value }) => credential.set(value)} class={fieldClass} />
+          <Input
+            accessibilityLabel={props.preset ? "Bearer token" : "Credential"}
+            masked
+            value={credential()}
+            onChange={({ value }) => credential.set(value)}
+            class={fieldClass}
+          />
           <Text class="text-sm text-muted-foreground">Credentials are encrypted and never sent to the model.</Text>
         </Field>
       </If>
@@ -172,7 +184,12 @@ export function McpBrowse() {
           onSubmit={() => mcpQuery().trim() && searchRemote(mcpQuery())}
           class={`${fieldClass} min-w-0 flex-1`}
         />
-        <TextButton variant="primary" label="Search integrations.sh" disabled={!mcpQuery().trim()} onPress={() => searchRemote(mcpQuery())} />
+        <TextButton
+          variant="primary"
+          label="Search integrations.sh"
+          disabled={!mcpQuery().trim()}
+          onPress={() => searchRemote(mcpQuery())}
+        />
       </View>
       <Each of={mcpResults()} key={(r) => r.endpoint}>
         {(result) => (
@@ -194,14 +211,30 @@ export function McpBrowse() {
         open={mcpUrlOpen()}
         content={
           <View class="gap-3 pt-3">
-            <Input accessibilityLabel="Server URL" value={mcpUrl()} onChange={({ value }) => mcpUrl.set(value)} placeholder="https://example.com/mcp" class={fieldClass} />
+            <Input
+              accessibilityLabel="Server URL"
+              value={mcpUrl()}
+              onChange={({ value }) => mcpUrl.set(value)}
+              placeholder="https://example.com/mcp"
+              class={fieldClass}
+            />
             <View class="items-start">
-              <TextButton variant="primary" label="Connect" disabled={!mcpUrl().trim()} onPress={() => connect("MCP server", mcpUrl().trim())} />
+              <TextButton
+                variant="primary"
+                label="Connect"
+                disabled={!mcpUrl().trim()}
+                onPress={() => connect("MCP server", mcpUrl().trim())}
+              />
             </View>
           </View>
         }
       >
-        <View role="button" accessibilityLabel="Add server URL" onPress={() => mcpUrlOpen.update((o) => !o)} class="flex-row items-center gap-1">
+        <View
+          role="button"
+          accessibilityLabel="Add server URL"
+          onPress={() => mcpUrlOpen.update((o) => !o)}
+          class="flex-row items-center gap-1"
+        >
           <Text class="text-muted-foreground">Add server URL</Text>
           <Icon name={mcpUrlOpen() ? "chevron-down" : "chevron-right"} size={14} tone="muted-foreground" />
         </View>

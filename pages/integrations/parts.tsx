@@ -9,14 +9,24 @@ import { go } from "./route";
 /** The first letter on a tile: the app's brand mark stands in until it has one. */
 export function Logo(props: { name: string; large?: boolean }) {
   return (
-    <View class={`${props.large ? "size-14 rounded-2xl" : "size-10 rounded-xl"} shrink-0 items-center justify-center border border-border bg-muted`}>
+    <View
+      class={`${props.large ? "size-14 rounded-2xl" : "size-10 rounded-xl"} shrink-0 items-center justify-center border border-border bg-muted`}
+    >
       <Text class={`${props.large ? "text-2xl" : "text-base"} font-semibold text-foreground`}>{props.name.slice(0, 1).toUpperCase()}</Text>
     </View>
   );
 }
 
 /** A list row: logo, name and a line under it, with trailing actions; it opens when `onOpen` is given. */
-export function Row(props: { name: string; detail?: string; status?: JSX.Element; mark?: JSX.Element; openLabel?: string; onOpen?: () => void; children?: JSX.Element }) {
+export function Row(props: {
+  name: string;
+  detail?: string;
+  status?: JSX.Element;
+  mark?: JSX.Element;
+  openLabel?: string;
+  onOpen?: () => void;
+  children?: JSX.Element;
+}) {
   const body = () => (
     <>
       {props.mark ?? <Logo name={props.name} />}

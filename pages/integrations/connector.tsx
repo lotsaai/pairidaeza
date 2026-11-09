@@ -56,7 +56,11 @@ export function ConnectorDetail(props: { app: App }) {
           )}
         </Each>
         <View class="items-start">
-          <Button accessibilityLabel="Add another" onPress={() => addAccount(props.app.id)} class="min-h-9 flex-row items-center gap-1.5 rounded-full px-2 hover:bg-accent">
+          <Button
+            accessibilityLabel="Add another"
+            onPress={() => addAccount(props.app.id)}
+            class="min-h-9 flex-row items-center gap-1.5 rounded-full px-2 hover:bg-accent"
+          >
             <Icon name="plus" size={14} tone="muted-foreground" />
             <Text class="text-sm text-muted-foreground">Add another</Text>
           </Button>
@@ -77,7 +81,12 @@ export function ConnectorDetail(props: { app: App }) {
             </View>
           }
         >
-          <View role="button" accessibilityLabel="Tools" onPress={() => toolsOpen.update((o) => !o)} class="flex-row items-center gap-1 px-2">
+          <View
+            role="button"
+            accessibilityLabel="Tools"
+            onPress={() => toolsOpen.update((o) => !o)}
+            class="flex-row items-center gap-1 px-2"
+          >
             <Text class="text-sm text-muted-foreground">{props.app.tools.length === 1 ? "1 tool" : `${props.app.tools.length} tools`}</Text>
             <Icon name={toolsOpen() ? "chevron-down" : "chevron-right"} size={14} tone="muted-foreground" />
           </View>

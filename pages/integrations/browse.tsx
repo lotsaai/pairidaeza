@@ -103,7 +103,9 @@ function Chip(props: { name: string | null }) {
       }}
       class="min-h-8 items-center justify-center rounded-full bg-secondary px-3.5 selected:bg-primary"
     >
-      <Text class={`text-sm ${on() ? "text-primary-foreground" : "text-foreground"}`}>{props.name ? categoryLabel(props.name) : "All"}</Text>
+      <Text class={`text-sm ${on() ? "text-primary-foreground" : "text-foreground"}`}>
+        {props.name ? categoryLabel(props.name) : "All"}
+      </Text>
     </Button>
   );
 }
@@ -125,7 +127,9 @@ function Chips() {
               accessibilityLabel="More"
               class={`min-h-8 flex-row items-center justify-center gap-1 rounded-full px-3.5 ${inMenu() ? "bg-primary" : "bg-secondary"}`}
             >
-              <Text class={`text-sm ${inMenu() ? "text-primary-foreground" : "text-foreground"}`}>{inMenu() ? categoryLabel(category()!) : "More"}</Text>
+              <Text class={`text-sm ${inMenu() ? "text-primary-foreground" : "text-foreground"}`}>
+                {inMenu() ? categoryLabel(category()!) : "More"}
+              </Text>
               <Icon name="chevron-down" size={14} tone={inMenu() ? "primary-foreground" : "foreground"} />
             </View>
           }
@@ -172,7 +176,9 @@ function PluginSections() {
           <Section
             title={section()[1]}
             action={
-              section()[2].length > SECTION_SIZE ? <TextButton variant="ghost" label="View all" onPress={() => category.set(section()[0])} /> : undefined
+              section()[2].length > SECTION_SIZE ? (
+                <TextButton variant="ghost" label="View all" onPress={() => category.set(section()[0])} />
+              ) : undefined
             }
           >
             <PluginRows of={section()[2].slice(0, SECTION_SIZE)} />
@@ -260,7 +266,11 @@ export function Browse() {
         </If>
         <If when={!category()}>
           <View class="mt-10 items-center">
-            <Button accessibilityLabel="Submit a plugin" onPress={() => void openUrl(SUBMIT_PLUGIN_URL)} class="flex-row items-center gap-1">
+            <Button
+              accessibilityLabel="Submit a plugin"
+              onPress={() => void openUrl(SUBMIT_PLUGIN_URL)}
+              class="flex-row items-center gap-1"
+            >
               <Text class="text-sm text-muted-foreground">Submit a plugin</Text>
               <Icon name="arrow-up-right" size={14} tone="muted-foreground" />
             </Button>
