@@ -1,0 +1,13 @@
+[profile.default]
+# Report tests over one minute as slow; terminate them after two minutes.
+slow-timeout = { period = "1m", terminate-after = 2 }
+
+[profile.default.junit]
+path = "junit.xml"
+
+[profile.ci]
+fail-fast = false
+
+[profile.ci.junit]
+path = "junit.xml"
+

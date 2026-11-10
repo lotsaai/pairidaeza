@@ -12,16 +12,16 @@ import { type BotTemplate, templates } from "./templates-data";
 const query = signal("");
 const category = signal<string | null>(null);
 
-export const templateBySlug = (slug: string) => templates.find((t) => t.slug === slug);
+export const templateBySlug = (slug: string) => templates().find((t) => t.slug === slug);
 
 export function resetTemplates() {
   query.set("");
   category.set(null);
 }
 
-const categories = [...new Set(templates.map((t) => t.category))];
+const categories = () => [...new Set(templates().map((t) => t.category))];
 const matches = () =>
-  templates.filter(
+  templates().filter(
     (t) => (!category() || t.category === category()) && matchesWordPrefixes([t.name, t.category, ...t.integrations].join(" "), query()),
   );
 
@@ -51,7 +51,7 @@ export function Templates() {
       />
       <View class="flex-row flex-wrap gap-2">
         <Chip name={null} />
-        <Each of={categories} key={(c) => c}>
+        <Each of={categories()} key={(c) => c}>
           {(name) => <Chip name={name()} />}
         </Each>
       </View>
@@ -76,11 +76,11 @@ export function Templates() {
 }
 
 /** The app in the catalog a template's app name stands for, when there is one. */
-const appNamed = (name: string) => apps.find((a) => a.name.toLowerCase() === name.toLowerCase());
+const appNamed = (name: string) => apps().find((a) => a.name.toLowerCase() === name.toLowerCase());
 
 /** Makes a bot from the template and opens its chat; its prompt becomes the bot's instructions. */
 function createFromTemplate(template: BotTemplate) {
-  const color = botColors[templates.indexOf(template) % botColors.length];
+  const color = botColors[templates().indexOf(template) % botColors.length];
   const id = createBot(template.name, color);
   updateBot(id, { instructions: template.prompt });
   integrationsOpen.set(false);

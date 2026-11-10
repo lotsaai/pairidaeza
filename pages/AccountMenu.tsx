@@ -76,8 +76,8 @@ export function AccountMenu(props: { mini: boolean }) {
           onPress={() => integrationsOpen.set(true)}
           class="min-h-9 min-w-0 flex-1 flex-row items-center justify-between gap-2 rounded-full border border-border bg-sidebar-accent px-4 hover:bg-sidebar-accent/70 active:bg-sidebar-accent/70"
         >
-          <Text class="truncate text-sm font-medium text-sidebar-foreground">Connect apps</Text>
-          <Icon name="plug" size={16} tone="muted-foreground" />
+          <Text class="truncate text-sm font-medium text-sidebar-accent-foreground">Connect apps</Text>
+          <Icon name="plug" size={16} tone="sidebar-accent-foreground" />
         </Button>
       </If>
     </View>

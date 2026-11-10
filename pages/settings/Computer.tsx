@@ -2,59 +2,24 @@ import { signal, Text, View } from "nsh";
 import { Input } from "nsh/base";
 import { SelectField, SettingsGroup, SettingsRow, SwitchSetting } from "../../components/settings";
 import { Field, fieldClass, IconButton, TextButton } from "../../components/ui";
+import { apiSignal } from "../../api";
 
 type ProviderField = { key: string; label: string; secret?: boolean; required?: boolean };
 type Provider = { value: string; title: string; fields: ProviderField[] };
 
-const apiKey: ProviderField = { key: "apiKey", label: "API key", secret: true, required: true };
-const providers: Provider[] = [
-  { value: "default", title: "Deployment default (docker)", fields: [] },
-  {
-    value: "wuying",
-    title: "Wuying",
-    fields: [
-      { key: "desktopId", label: "Desktop ID", required: true },
-      { key: "endUserId", label: "End user ID", required: true },
-      { key: "regionId", label: "Region" },
-      { key: "accessKeyId", label: "Access key ID", secret: true, required: true },
-      { key: "accessKeySecret", label: "Access key secret", secret: true, required: true },
-      { key: "mcpUrl", label: "Gateway URL", required: true },
-      { key: "mcpToken", label: "Gateway token", secret: true, required: true },
-    ],
-  },
-  { value: "e2b", title: "E2B", fields: [apiKey] },
-  { value: "novita", title: "Novita", fields: [apiKey, { key: "template", label: "Template" }] },
-  { value: "daytona", title: "Daytona", fields: [apiKey, { key: "apiUrl", label: "API URL" }, { key: "target", label: "Target" }] },
-  {
-    value: "createos",
-    title: "CreateOS",
-    fields: [apiKey, { key: "baseUrl", label: "API URL" }, { key: "shape", label: "Shape" }, { key: "rootfs", label: "Root filesystem" }],
-  },
-  { value: "boat", title: "Boat", fields: [apiKey, { key: "apiUrl", label: "API URL" }] },
-  { value: "boxd", title: "Boxd", fields: [apiKey, { key: "org", label: "Organization" }] },
-  {
-    value: "railway",
-    title: "Railway",
-    fields: [
-      { key: "apiToken", label: "API token", secret: true, required: true },
-      { key: "environmentId", label: "Environment ID", required: true },
-      { key: "region", label: "Region" },
-    ],
-  },
-];
+const providers = apiSignal<Provider[]>("computer", "providers", []);
 
-const provider = signal("default");
+const provider = signal("");
 const values = signal<Record<string, string>>({});
-const storedProvider = signal("default");
-const storedValues = signal<Record<string, string>>({});
+const storedProvider = apiSignal("computer", "storedProvider", "");
+const storedValues = apiSignal<Record<string, string>>("computer", "storedValues", {});
 const saved = signal(false);
-const allowed = signal(true);
-const devices = signal([
-  { id: "mac", name: "MacBook Pro", connected: true },
-  { id: "desktop", name: "Desktop", connected: false },
-]);
+const allowed = apiSignal("computer", "allowed", false);
+const devices = apiSignal<{ id: string; name: string; connected: boolean }[]>("computer", "devices", []);
 
 export function ComputerSettings() {
+  provider.set(storedProvider());
+  values.set({ ...storedValues() });
   return (
     <>
       <SettingsGroup title="Computers">
@@ -62,7 +27,7 @@ export function ComputerSettings() {
           <Field label="New computers run on">
             <SelectField
               label="New computers run on"
-              items={providers}
+              items={providers()}
               value={provider()}
               onChange={(value) => {
                 provider.set(value);
@@ -71,7 +36,7 @@ export function ComputerSettings() {
               }}
             />
           </Field>
-          <Each of={providers.find((item) => item.value === provider())?.fields ?? []} key={(field) => field.key}>
+          <Each of={providers().find((item) => item.value === provider())?.fields ?? []} key={(field) => field.key}>
             {(field) => (
               <Field label={field().label}>
                 <Input
@@ -93,10 +58,15 @@ export function ComputerSettings() {
               label="Save"
               variant="primary"
               onPress={() => {
-                const fields = providers.find((item) => item.value === provider())?.fields ?? [];
+                const fields = providers().find((item) => item.value === provider())?.fields ?? [];
                 if (fields.some((field) => field.required && !values()[field.key]?.trim())) return;
                 storedProvider.set(provider());
-                storedValues.set({ ...values() });
+                // The mock does not persist credentials; configure a secure secret store for real providers.
+                storedValues.set(
+                  Object.fromEntries(
+                    Object.entries(values()).filter(([key]) => !fields.some((field) => field.key === key && field.secret)),
+                  ),
+                );
                 saved.set(true);
               }}
             />

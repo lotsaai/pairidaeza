@@ -1,0 +1,88 @@
+amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Builtins.pkl"
+
+local linters = new Mapping<String, Step> {
+  ["betterleaks"] = new Step {
+    glob = List("**/*")
+    exclude = List("mise.local.toml", ".agents/skills/mise/references/environment-variables.md")
+    check = "betterleaks dir --redact --no-banner --verbose {{files}}"
+  }
+  ["cargo-check"] = (Builtins.cargo_check) {
+    check = "cargo check --quiet --workspace --all-targets"
+    fix = "cargo check --quiet --workspace --all-targets"
+    depends = "rustfmt"
+    check_first = true
+  }
+  ["cargo-clippy"] = new Step {
+    glob = List("**/*.rs")
+    stage = List("**/*.rs")
+    check = "cargo clippy --quiet --workspace --all-targets -- -D warnings"
+    fix = "cargo clippy --quiet --workspace --all-targets --fix --allow-dirty --allow-staged -- -D warnings"
+    check_first = true
+    depends = "cargo-check"
+  }
+  ["rustfmt"] = new Step {
+    glob = List("**/*.rs")
+    stage = List("**/*.rs")
+    check = "rustfmt --quiet --edition 2024 --check {{files}}"
+    fix = "rustfmt --quiet --edition 2024 {{files}}"
+    depends = "cargo-sort"
+  }
+  ["cargo-sort"] = new Step {
+    glob = List("**/Cargo.toml")
+    stage = List("**/Cargo.toml")
+    check = "cargo sort --workspace --grouped --check ."
+    fix = "cargo sort --workspace --grouped ."
+    check_first = true
+  }
+  ["oxfmt"] = new Step {
+    glob = List("**/*.ts", "**/*.tsx", "**/*.json")
+    exclude = List(".nsh/**", "target/**", "**/.agents/skills/**")
+    check = "oxfmt --check {{files}}"
+    fix = "oxfmt {{files}}"
+  }
+  ["nsh-check"] = new Step {
+    glob = List("**/*.ts", "**/*.tsx", "**/*.rs", "**/Cargo.toml", "Cargo.lock", "nsh.json", "theme.json", "tsconfig.json")
+    exclude = List(".nsh/**", "target/**", "**/.agents/skills/**")
+    check = "nsh check"
+    depends = "cargo-check"
+  }
+  ["shellcheck"] = (Builtins.shellcheck) {
+    exclude = "**/.agents/skills/**"
+  }
+  ["shfmt"] = (Builtins.shfmt) {
+    exclude = "**/.agents/skills/**"
+  }
+  ["yamllint"] = (Builtins.yamllint) {
+    exclude = "**/.agents/skills/**"
+  }
+  ["taplo"] {
+    glob = "*.toml"
+    check = "taplo check {{files}}"
+  }
+  ["pkl"] {
+    glob = "*.pkl"
+    // pkl default cache (~/.pkl) is read-only in this env; use project-local cache
+    check = "pkl eval --cache-dir .cache/native/pkl {{files}}"
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps {
+      ...linters
+    }
+  }
+  ["pre-push"] {
+    steps = linters
+  }
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+  ["check"] {
+    steps = linters
+  }
+}

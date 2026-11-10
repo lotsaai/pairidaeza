@@ -1,0 +1,167 @@
+{
+  "apps": [
+    {
+      "id": "gmail",
+      "name": "Gmail",
+      "slug": "GMAIL",
+      "tools": [
+        "GMAIL_FETCH_EMAILS",
+        "GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID",
+        "GMAIL_FETCH_MESSAGE_BY_THREAD_ID",
+        "GMAIL_SEND_EMAIL",
+        "GMAIL_CREATE_EMAIL_DRAFT",
+        "GMAIL_LIST_LABELS"
+      ]
+    },
+    {
+      "id": "google-calendar",
+      "name": "Google Calendar",
+      "slug": "GOOGLECALENDAR",
+      "tools": ["GOOGLECALENDAR_CREATE_EVENT"]
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "slug": "GOOGLEDRIVE",
+      "tools": []
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "slug": "SLACK",
+      "tools": ["SLACK_SEND_MESSAGE", "SLACK_LIST_CHANNELS", "SLACK_FIND_CHANNELS", "SLACK_FETCH_CONVERSATION_HISTORY"]
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "slug": "NOTION",
+      "tools": ["NOTION_SEARCH"]
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "slug": "GITHUB",
+      "tools": ["GITHUB_LIST_RELEASES", "GITHUB_GET_RELEASE", "GITHUB_CREATE_AN_ISSUE"]
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "slug": "SALESFORCE",
+      "tools": []
+    },
+    {
+      "id": "zendesk",
+      "name": "Zendesk",
+      "slug": "ZENDESK",
+      "tools": []
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "slug": "LINEAR",
+      "tools": []
+    }
+  ],
+  "plugins": [
+    {
+      "name": "planning-notes",
+      "displayName": "Planning Notes",
+      "description": "Plan work and write notes",
+      "category": "productivity",
+      "source": "https://github.com/cursor/plugins#planning-notes",
+      "skills": [
+        {
+          "name": "planning-notes",
+          "description": "Organize a daily plan",
+          "content": "---\nname: planning-notes\ndescription: Organize a daily plan\n---\n\nUse the notes integration to record the plan.\n"
+        }
+      ],
+      "servers": [
+        {
+          "name": "notes",
+          "endpoint": "https://marketplace-tools.example.test/mcp"
+        }
+      ]
+    },
+    {
+      "name": "calcom",
+      "displayName": "Calcom",
+      "description": "Scheduling",
+      "category": "productivity",
+      "source": "https://github.com/acme/plugins#calcom",
+      "skills": [],
+      "servers": [
+        {
+          "name": "Calcom"
+        }
+      ]
+    },
+    {
+      "name": "sentry",
+      "displayName": "Sentry",
+      "description": "Error monitoring",
+      "category": "ops",
+      "source": "https://github.com/acme/plugins#sentry",
+      "skills": [],
+      "servers": [
+        {
+          "name": "Sentry"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "id": "executor",
+      "name": "Executor",
+      "urlPlaceholder": "https://executor.example/mcp"
+    },
+    {
+      "id": "treg",
+      "name": "Treg",
+      "url": "https://treg.to/mcp/"
+    }
+  ],
+  "mcpDirectory": [
+    {
+      "name": "Notion",
+      "endpoint": "https://mcp.notion.example.test/mcp"
+    },
+    {
+      "name": "GitHub",
+      "endpoint": "https://mcp.example.test/mcp"
+    }
+  ],
+  "previewFixture": {
+    "name": "imported-notes",
+    "displayName": "plugin-marketplace-fixture",
+    "description": "Notes from GitHub",
+    "category": null,
+    "source": "https://github.com/example/plugin-marketplace-fixture",
+    "skills": [
+      {
+        "name": "imported-notes",
+        "description": "Keep imported notes",
+        "content": "---\nname: imported-notes\ndescription: Keep imported notes\n---\n\nRecord notes.\n"
+      }
+    ],
+    "servers": [
+      {
+        "name": "notes",
+        "endpoint": "https://marketplace-tools.example.test/mcp"
+      }
+    ]
+  },
+  "previews": [],
+  "connectedIds": ["gmail", "google-calendar", "google-drive", "slack"],
+  "accounts": {
+    "gmail": ["Gmail"],
+    "google-calendar": ["Google Calendar"],
+    "google-drive": ["Google Drive"],
+    "slack": ["Slack"]
+  },
+  "installs": {},
+  "assigned": [],
+  "servers": [],
+  "sources": []
+}

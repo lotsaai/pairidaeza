@@ -2,38 +2,18 @@ import { signal, Text, View } from "nsh";
 import { Input } from "nsh/base";
 import { SelectField, SettingsGroup, SettingsRow } from "../../components/settings";
 import { fieldClass, TextButton } from "../../components/ui";
+import { apiSignal } from "../../api";
 
-const providers = [
-  { value: "macos", title: "Server (Mac)" },
-  { value: "elevenlabs", title: "ElevenLabs" },
-  { value: "openai", title: "OpenAI" },
-  { value: "cartesia", title: "Cartesia" },
-  { value: "fish-audio", title: "Fish Audio" },
-  { value: "openai-compatible", title: "Self-hosted" },
-];
-const openAiVoices = [
-  { value: "alloy", title: "Alloy (Neutral)" },
-  { value: "ash", title: "Ash (Clear)" },
-  { value: "ballad", title: "Ballad (Warm)" },
-  { value: "cedar", title: "Cedar" },
-  { value: "coral", title: "Coral (Bright)" },
-  { value: "echo", title: "Echo (Even)" },
-  { value: "fable", title: "Fable (Narrative)" },
-  { value: "marin", title: "Marin" },
-  { value: "onyx", title: "Onyx (Deep)" },
-  { value: "nova", title: "Nova (Energetic)" },
-  { value: "sage", title: "Sage (Calm)" },
-  { value: "shimmer", title: "Shimmer (Soft)" },
-  { value: "verse", title: "Verse (Expressive)" },
-];
-const provider = signal("openai");
-const connected = signal<string[]>(["openai"]);
+const providers = apiSignal<{ value: string; title: string }[]>("voice", "providers", []);
+const openAiVoices = apiSignal<{ value: string; title: string }[]>("voice", "openAiVoices", []);
+const provider = apiSignal("voice", "provider", "");
+const connected = apiSignal<string[]>("voice", "connected", []);
 const apiKey = signal("");
-const serverUrl = signal("");
-const speechModel = signal("");
-const ttsModel = signal("");
-const sttModel = signal("");
-const voice = signal<Record<string, string>>({ openai: "alloy", "openai-compatible": "af_heart" });
+const serverUrl = apiSignal("voice", "serverUrl", "");
+const speechModel = apiSignal("voice", "speechModel", "");
+const ttsModel = apiSignal("voice", "ttsModel", "");
+const sttModel = apiSignal("voice", "sttModel", "");
+const voice = apiSignal<Record<string, string>>("voice", "voice", {});
 const playing = signal(false);
 
 export function VoiceSettings() {
@@ -42,6 +22,7 @@ export function VoiceSettings() {
   const keyless = () => provider() === "macos";
   const connect = () => {
     if (!keyless() && (selfHosted() ? !serverUrl().trim() : apiKey().trim().length < 8)) return;
+    // Credentials are validation-only in this mock and are not stored.
     connected.update((items) => (items.includes(provider()) ? items : [...items, provider()]));
     apiKey.set("");
   };
@@ -58,7 +39,10 @@ export function VoiceSettings() {
           <SelectField
             label="Provider"
             value={provider()}
-            items={providers.map((item) => ({ ...item, title: `${item.title}${connected().includes(item.value) ? " (Connected)" : ""}` }))}
+            items={providers().map((item) => ({
+              ...item,
+              title: `${item.title}${connected().includes(item.value) ? " (Connected)" : ""}`,
+            }))}
             onChange={(value) => {
               provider.set(value);
               apiKey.set("");
@@ -137,7 +121,7 @@ export function VoiceSettings() {
                 <SelectField
                   label="Voice"
                   value={voice()[provider()] ?? ""}
-                  items={provider() === "openai" ? openAiVoices : []}
+                  items={provider() === "openai" ? openAiVoices() : []}
                   onChange={(value) => voice.update((voices) => ({ ...voices, [provider()]: value }))}
                 />
               }

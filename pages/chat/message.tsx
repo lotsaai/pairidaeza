@@ -46,7 +46,7 @@ function Rail(props: {
           placement="top"
           align={align()}
           offset={4}
-          popupClass="rounded-2xl border border-border bg-popover p-1.5 shadow-lg"
+          popupClass="rounded-2xl border border-border bg-popover p-1.5 shadow-lg shadow-shadow-color"
           trigger={
             <Button accessibilityLabel="React" class={button()}>
               <Icon name="smile" size={15} tone="muted-foreground" />

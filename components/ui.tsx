@@ -53,7 +53,7 @@ const buttonVariants = {
   primary: { box: "bg-primary active:bg-primary/80", label: "text-primary-foreground" },
   default: { box: "border border-border bg-background hover:bg-accent active:bg-accent", label: "text-foreground" },
   secondary: { box: "bg-secondary active:bg-secondary/70", label: "text-secondary-foreground" },
-  destructive: { box: "bg-destructive active:bg-destructive/80", label: "text-primary-foreground" },
+  destructive: { box: "bg-destructive active:bg-destructive/80", label: "text-destructive-foreground" },
   ghost: { box: "hover:bg-accent active:bg-accent", label: "text-foreground" },
 } as const;
 
@@ -117,7 +117,7 @@ export function ChatAvatar(props: { bots: Bot[]; size?: number }) {
 }
 
 /** The popup surface menus, popovers and sheets share. */
-export const popupClass = "min-w-48 rounded-(--radius) border border-border bg-popover p-1 shadow-lg";
+export const popupClass = "min-w-48 rounded-(--radius) border border-border bg-popover p-1 shadow-lg shadow-shadow-color";
 
 /** A section title in panels and settings. */
 export function SectionTitle(props: { children: JSX.Element }) {
@@ -163,9 +163,16 @@ export function AppContextMenu(props: { trigger: JSX.Element; children: JSX.Elem
 const menuRowClass = "flex-row items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-accent focus:bg-accent active:bg-accent";
 
 /** One menu row: an icon, its label and an optional muted detail; `destructive` rows read in the destructive color. */
-export function MenuRow(props: { icon: IconName; label: string; detail?: string; onSelect: () => void; destructive?: boolean }) {
+export function MenuRow(props: {
+  icon: IconName;
+  label: string;
+  detail?: string;
+  onSelect: () => void;
+  destructive?: boolean;
+  class?: string;
+}) {
   return (
-    <MenuItem onSelect={props.onSelect} class={menuRowClass}>
+    <MenuItem onSelect={props.onSelect} class={`${menuRowClass} ${props.class ?? ""}`}>
       <Icon name={props.icon} size={16} tone={props.destructive ? "destructive" : "muted-foreground"} />
       <Text class={`flex-1 text-sm ${props.destructive ? "text-destructive" : "text-popover-foreground"}`}>{props.label}</Text>
       <If when={props.detail}>{(detail) => <Text class="text-xs text-muted-foreground tabular-nums">{detail()}</Text>}</If>

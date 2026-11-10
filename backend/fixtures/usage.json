@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "runs": 128,
+    "inputTokens": 824000,
+    "outputTokens": 132000,
+    "totalTokens": 956000,
+    "costUsd": 4.27,
+    "modelCalls": 146,
+    "models": [
+      {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-5",
+        "modelCalls": 92,
+        "inputTokens": 624000,
+        "outputTokens": 102000,
+        "totalTokens": 726000,
+        "costUsd": 3.65
+      },
+      {
+        "provider": "openai-codex",
+        "model": "gpt-5.3-codex",
+        "modelCalls": 54,
+        "inputTokens": 200000,
+        "outputTokens": 30000,
+        "totalTokens": 230000,
+        "costUsd": 0.62
+      }
+    ]
+  }
+}

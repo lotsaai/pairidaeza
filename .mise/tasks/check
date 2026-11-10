@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#MISE description="Run linters and formatters"
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+hk check --all

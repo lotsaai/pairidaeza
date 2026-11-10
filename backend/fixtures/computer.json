@@ -1,0 +1,192 @@
+{
+  "providers": [
+    {
+      "value": "default",
+      "title": "Deployment default (docker)",
+      "fields": []
+    },
+    {
+      "value": "wuying",
+      "title": "Wuying",
+      "fields": [
+        {
+          "key": "desktopId",
+          "label": "Desktop ID",
+          "required": true
+        },
+        {
+          "key": "endUserId",
+          "label": "End user ID",
+          "required": true
+        },
+        {
+          "key": "regionId",
+          "label": "Region"
+        },
+        {
+          "key": "accessKeyId",
+          "label": "Access key ID",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "accessKeySecret",
+          "label": "Access key secret",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "mcpUrl",
+          "label": "Gateway URL",
+          "required": true
+        },
+        {
+          "key": "mcpToken",
+          "label": "Gateway token",
+          "secret": true,
+          "required": true
+        }
+      ]
+    },
+    {
+      "value": "e2b",
+      "title": "E2B",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        }
+      ]
+    },
+    {
+      "value": "novita",
+      "title": "Novita",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "template",
+          "label": "Template"
+        }
+      ]
+    },
+    {
+      "value": "daytona",
+      "title": "Daytona",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "apiUrl",
+          "label": "API URL"
+        },
+        {
+          "key": "target",
+          "label": "Target"
+        }
+      ]
+    },
+    {
+      "value": "createos",
+      "title": "CreateOS",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "baseUrl",
+          "label": "API URL"
+        },
+        {
+          "key": "shape",
+          "label": "Shape"
+        },
+        {
+          "key": "rootfs",
+          "label": "Root filesystem"
+        }
+      ]
+    },
+    {
+      "value": "boat",
+      "title": "Boat",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "apiUrl",
+          "label": "API URL"
+        }
+      ]
+    },
+    {
+      "value": "boxd",
+      "title": "Boxd",
+      "fields": [
+        {
+          "key": "apiKey",
+          "label": "API key",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "org",
+          "label": "Organization"
+        }
+      ]
+    },
+    {
+      "value": "railway",
+      "title": "Railway",
+      "fields": [
+        {
+          "key": "apiToken",
+          "label": "API token",
+          "secret": true,
+          "required": true
+        },
+        {
+          "key": "environmentId",
+          "label": "Environment ID",
+          "required": true
+        },
+        {
+          "key": "region",
+          "label": "Region"
+        }
+      ]
+    }
+  ],
+  "storedProvider": "default",
+  "storedValues": {},
+  "allowed": true,
+  "devices": [
+    {
+      "id": "mac",
+      "name": "MacBook Pro",
+      "connected": true
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop",
+      "connected": false
+    }
+  ]
+}

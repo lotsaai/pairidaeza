@@ -5,7 +5,10 @@ edition = "2024"
 publish = false
 
 [workspace]
+members = ["backend"]
+resolver = "3"
 
 [dependencies]
-nsh-core = "0.4.0"
-nsh-base = "0.4.0"
+# Temporary nightly pin for Picker.pickFiles; return to crates.io with NSH 0.4.1 or 0.5.0.
+nsh-base = { git = "https://github.com/longbridge/nsh", rev = "32a6f61f2c9c8c305a3719c02fd508ed61a94473" }
+nsh-core = { git = "https://github.com/longbridge/nsh", rev = "32a6f61f2c9c8c305a3719c02fd508ed61a94473" }

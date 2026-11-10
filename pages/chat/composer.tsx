@@ -1,7 +1,7 @@
 // A chat's composer: the reply being quoted, attachments, the text and Send.
-import { Picker, safeAreaInsets, signal, Text, View } from "nsh";
+import { Picker, platform, safeAreaInsets, signal, Text, View } from "nsh";
 import { Button, Input } from "nsh/base";
-import { Icon } from "../../components/ui";
+import { AppMenu, Icon, MenuRow } from "../../components/ui";
 import { currentPreferences, chatById, sendMessage } from "../../store";
 import { wide } from "../../nav";
 import type { BubbleColors } from "./message";
@@ -9,6 +9,9 @@ import { draftOf, replyOf, setDraft, setReply } from "./state";
 
 export function Composer(props: { chatId: string; bubble?: BubbleColors }) {
   const attachments = signal<string[]>([]);
+  const picking = signal(false);
+  const pickerError = signal("");
+  const attachMenuOpen = signal(false);
   const insets = safeAreaInsets();
   const draft = () => draftOf(props.chatId);
   const canSend = () => draft().trim().length > 0 || attachments().length > 0;
@@ -20,10 +23,20 @@ export function Composer(props: { chatId: string; bubble?: BubbleColors }) {
     setReply(props.chatId, undefined);
     attachments.set([]);
   };
-  // The system's picker gives photos only: NSH has no picker for other files.
-  const attach = async () => {
-    const picked = await Picker.pickImages({ multiple: true });
-    attachments.update((all) => [...all, ...picked.map((p) => p.file.name).filter((name) => !all.includes(name))]);
+  const attach = async (source: "files" | "photos") => {
+    if (picking()) return;
+    picking.set(true);
+    pickerError.set("");
+    try {
+      const picked = source === "photos" ? await Picker.pickImages({ multiple: true }) : await Picker.pickFiles({ multiple: true });
+      if (picked.length) {
+        attachments.update((all) => [...new Set([...all, ...picked.map((p) => p.file.name)])]);
+      }
+    } catch {
+      pickerError.set("Could not open the file picker. Please try again.");
+    } finally {
+      picking.set(false);
+    }
   };
   const enterSends = () => currentPreferences().sendWithEnter;
   return (
@@ -66,13 +79,37 @@ export function Composer(props: { chatId: string; bubble?: BubbleColors }) {
           </View>
         </If>
         <View class="flex-row items-end gap-3.5">
-          <Button
-            accessibilityLabel="Attach file"
-            onPress={attach}
-            class="size-8 items-center justify-center rounded-full border border-border bg-muted hover:bg-accent active:bg-accent"
+          <If
+            when={!platform.desktop}
+            else={
+              <Button
+                accessibilityLabel="Attach file"
+                disabled={picking()}
+                onPress={() => attach("files")}
+                class="size-8 items-center justify-center rounded-full border border-border bg-muted hover:bg-accent active:bg-accent"
+              >
+                <Icon name="plus" size={16} tone="muted-foreground" />
+              </Button>
+            }
           >
-            <Icon name="plus" size={16} tone="muted-foreground" />
-          </Button>
+            <AppMenu
+              onOpenChange={(open) => attachMenuOpen.set(open)}
+              trigger={
+                <Button
+                  accessibilityLabel="Attach file"
+                  disabled={picking()}
+                  class={`size-11 items-center justify-center rounded-full border border-border ${attachMenuOpen() || picking() ? "bg-accent" : "bg-muted"} hover:bg-accent active:bg-accent`}
+                >
+                  <Icon name="plus" size={16} tone="muted-foreground" />
+                </Button>
+              }
+            >
+              <View style={{ paddingBottom: insets().bottom }}>
+                <MenuRow class="min-h-11" icon="image" label="Photo library…" onSelect={() => attach("photos")} />
+                <MenuRow class="min-h-11" icon="folder-open" label="Browse files…" onSelect={() => attach("files")} />
+              </View>
+            </AppMenu>
+          </If>
           <Input
             value={draft()}
             onChange={({ value }) => setDraft(props.chatId, value)}
@@ -100,6 +137,7 @@ export function Composer(props: { chatId: string; bubble?: BubbleColors }) {
           </Button>
         </View>
       </View>
+      <If when={pickerError()}>{(error) => <Text class="px-3 pt-1 text-sm text-destructive">{error()}</Text>}</If>
     </View>
   );
 }

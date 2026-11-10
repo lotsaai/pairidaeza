@@ -124,7 +124,7 @@ export function SkillsDialog() {
       onOpenChange={({ open }) => !open && close()}
       animation="fade"
       backdropClass="bg-overlay"
-      class="mt-16 max-h-[80%] w-full max-w-2xl self-center rounded-(--radius) border border-border bg-popover shadow-lg"
+      class="mt-16 max-h-[80%] w-full max-w-2xl self-center rounded-(--radius) border border-border bg-popover shadow-lg shadow-shadow-color"
     >
       <View class="flex-row items-center justify-between px-5 pt-5">
         <Text role="header" class="text-lg font-semibold text-popover-foreground">

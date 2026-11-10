@@ -1,0 +1,12 @@
+{
+  "provider": "supermemory",
+  "connected": null,
+  "scope": "isolated",
+  "mode": "cloud",
+  "baseUrl": "",
+  "workspace": "",
+  "userPeer": "",
+  "endpoint": "",
+  "brainLabel": "",
+  "allowWrites": "recall"
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the Pairidaeza app on an iOS simulator"
+#MISE daemons=["api"]
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+export SIMCTL_CHILD_PAIRIDAEZA_API_URL="${PAIRIDAEZA_API_URL:-http://127.0.0.1:17810}"
+
+# Let the iOS target select its SDK instead of inheriting the macOS SDK.
+exec env -u SDKROOT nsh dev . --target ios "$@"

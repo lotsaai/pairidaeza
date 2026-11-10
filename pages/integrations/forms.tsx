@@ -3,7 +3,7 @@ import { signal, Text, View } from "nsh";
 import { Collapsible, Input } from "nsh/base";
 import { SelectField } from "../../components/settings";
 import { Field, fieldClass, Icon, TextButton } from "../../components/ui";
-import { addServer, addSource, type Preset, presets, previewGithub, searchMcp, type SourceKind } from "./catalog";
+import { addServer, addSource, type Preset, presets, previewGithub, searchMcp, servers, type SourceKind } from "./catalog";
 import { Row } from "./parts";
 import { go, showManage } from "./route";
 
@@ -144,7 +144,6 @@ export function SourceForm(props: { kind: SourceKind; preset?: Preset }) {
 const mcpQuery = signal("");
 const mcpResults = signal<{ name: string; endpoint: string }[]>([]);
 const mcpSearched = signal(false);
-const mcpAdded = signal<string[]>([]);
 const mcpUrl = signal("");
 const mcpUrlOpen = signal(false);
 
@@ -166,7 +165,6 @@ export function openMcpBrowse(initialQuery?: string) {
 /** Connecting completes at once: the server's own sign-in page is not reachable here. */
 const connect = (name: string, endpoint: string) => {
   addServer(name, endpoint);
-  mcpAdded.update((all) => [...all, endpoint]);
 };
 
 export function McpBrowse() {
@@ -196,8 +194,8 @@ export function McpBrowse() {
           <Row name={result().name}>
             <TextButton
               variant="secondary"
-              label={mcpAdded().includes(result().endpoint) ? "Connected" : "Connect"}
-              disabled={mcpAdded().includes(result().endpoint)}
+              label={servers().some((server) => server.endpoint === result().endpoint) ? "Connected" : "Connect"}
+              disabled={servers().some((server) => server.endpoint === result().endpoint)}
               accessibilityLabel={`Connect ${result().name}`}
               onPress={() => connect(result().name, result().endpoint)}
             />
@@ -244,9 +242,9 @@ export function McpBrowse() {
 }
 
 /** The sources the + menu offers first: a custom MCP server, OpenAPI, GraphQL, then the presets. */
-export const sourceChoices: { label: string; kind: SourceKind; preset?: Preset }[] = [
+export const sourceChoices = (): { label: string; kind: SourceKind; preset?: Preset }[] => [
   { label: "MCP server", kind: "mcp" },
   { label: "OpenAPI", kind: "api" },
   { label: "GraphQL", kind: "graphql" },
-  ...presets.map((preset) => ({ label: preset.name, kind: "mcp" as const, preset })),
+  ...presets().map((preset) => ({ label: preset.name, kind: "mcp" as const, preset })),
 ];

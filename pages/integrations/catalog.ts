@@ -1,6 +1,5 @@
-// The integrations catalog and what is connected. Names, categories and tool lists come from the product's own
-// catalogs and fixtures; what is connected is mock state that lives only in memory.
-import { batch, signal } from "nsh";
+import { batch } from "nsh";
+import { apiSignal } from "../../api";
 
 export const PLUGIN_CATEGORIES = [
   "productivity",
@@ -33,39 +32,12 @@ export const categoryLabel = (name: string) => categoryLabels[name as PluginCate
 /** An app a bot connects to: its accounts and tools. */
 export type App = { id: string; name: string; slug: string; tools: string[] };
 
-export const apps: App[] = [
-  {
-    id: "gmail",
-    name: "Gmail",
-    slug: "GMAIL",
-    tools: [
-      "GMAIL_FETCH_EMAILS",
-      "GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID",
-      "GMAIL_FETCH_MESSAGE_BY_THREAD_ID",
-      "GMAIL_SEND_EMAIL",
-      "GMAIL_CREATE_EMAIL_DRAFT",
-      "GMAIL_LIST_LABELS",
-    ],
-  },
-  { id: "google-calendar", name: "Google Calendar", slug: "GOOGLECALENDAR", tools: ["GOOGLECALENDAR_CREATE_EVENT"] },
-  { id: "google-drive", name: "Google Drive", slug: "GOOGLEDRIVE", tools: [] },
-  {
-    id: "slack",
-    name: "Slack",
-    slug: "SLACK",
-    tools: ["SLACK_SEND_MESSAGE", "SLACK_LIST_CHANNELS", "SLACK_FIND_CHANNELS", "SLACK_FETCH_CONVERSATION_HISTORY"],
-  },
-  { id: "notion", name: "Notion", slug: "NOTION", tools: ["NOTION_SEARCH"] },
-  { id: "github", name: "GitHub", slug: "GITHUB", tools: ["GITHUB_LIST_RELEASES", "GITHUB_GET_RELEASE", "GITHUB_CREATE_AN_ISSUE"] },
-  { id: "salesforce", name: "Salesforce", slug: "SALESFORCE", tools: [] },
-  { id: "zendesk", name: "Zendesk", slug: "ZENDESK", tools: [] },
-  { id: "linear", name: "Linear", slug: "LINEAR", tools: [] },
-];
+export const apps = apiSignal<App[]>("integrations", "apps", []);
 
 /** The apps shown first, as a grid with no heading. */
 export const featuredIds = ["gmail", "google-calendar", "google-drive", "slack", "notion"];
 
-export const appById = (id: string) => apps.find((a) => a.id === id);
+export const appById = (id: string) => apps().find((a) => a.id === id);
 
 /** "GMAIL_SEND_EMAIL" under Gmail reads as "Send email": the app is already the page title. */
 export function toolLabel(name: string, app: App) {
@@ -88,44 +60,9 @@ export type Plugin = {
   servers: { name: string; endpoint?: string }[];
 };
 
-const MARKETPLACE_FIXTURE_SOURCE = "https://github.com/example/plugin-marketplace-fixture";
-const MARKETPLACE_FIXTURE_ENDPOINT = "https://marketplace-tools.example.test/mcp";
+const previewFixture = apiSignal<Plugin | null>("integrations", "previewFixture", null);
 
-export const plugins: Plugin[] = [
-  {
-    name: "planning-notes",
-    displayName: "Planning Notes",
-    description: "Plan work and write notes",
-    category: "productivity",
-    source: "https://github.com/cursor/plugins#planning-notes",
-    skills: [
-      {
-        name: "planning-notes",
-        description: "Organize a daily plan",
-        content: "---\nname: planning-notes\ndescription: Organize a daily plan\n---\n\nUse the notes integration to record the plan.\n",
-      },
-    ],
-    servers: [{ name: "notes", endpoint: MARKETPLACE_FIXTURE_ENDPOINT }],
-  },
-  {
-    name: "calcom",
-    displayName: "Calcom",
-    description: "Scheduling",
-    category: "productivity",
-    source: "https://github.com/acme/plugins#calcom",
-    skills: [],
-    servers: [{ name: "Calcom" }],
-  },
-  {
-    name: "sentry",
-    displayName: "Sentry",
-    description: "Error monitoring",
-    category: "ops",
-    source: "https://github.com/acme/plugins#sentry",
-    skills: [],
-    servers: [{ name: "Sentry" }],
-  },
-];
+export const plugins = apiSignal<Plugin[]>("integrations", "plugins", []);
 
 /** Brands people look for first, in order. */
 const RECOMMENDED = [
@@ -147,26 +84,20 @@ const RECOMMENDED = [
   "docusign",
 ];
 export const recommendedPlugins = () =>
-  plugins
+  plugins()
     .filter((p) => RECOMMENDED.includes(p.name))
     .sort((a, b) => RECOMMENDED.indexOf(a.name) - RECOMMENDED.indexOf(b.name))
     .slice(0, 6);
 
 /** Remote MCP services offered as one-step sources. A preset with a URL always connects there. */
 export type Preset = { id: string; name: string; url?: string; urlPlaceholder?: string };
-export const presets: Preset[] = [
-  { id: "executor", name: "Executor", urlPlaceholder: "https://executor.example/mcp" },
-  { id: "treg", name: "Treg", url: "https://treg.to/mcp/" },
-];
+export const presets = apiSignal<Preset[]>("integrations", "presets", []);
 
 /** What a search of the public MCP catalog finds. */
-const mcpDirectory = [
-  { name: "Notion", endpoint: "https://mcp.notion.example.test/mcp" },
-  { name: "GitHub", endpoint: "https://mcp.example.test/mcp" },
-];
+const mcpDirectory = apiSignal<{ name: string; endpoint: string }[]>("integrations", "mcpDirectory", []);
 export const searchMcp = (query: string) => {
   const needle = query.trim().toLowerCase();
-  return mcpDirectory.filter((r) => r.name.toLowerCase().includes(needle));
+  return mcpDirectory().filter((r) => r.name.toLowerCase().includes(needle));
 };
 
 const words = (text: string) =>
@@ -189,43 +120,22 @@ export const matchesPlugin = (p: Plugin, query: string) =>
   );
 
 /** Plugins the user previewed from a GitHub URL. */
-const previews = signal<Plugin[]>([]);
-export const pluginBySource = (source: string) => plugins.find((p) => p.source === source) ?? previews().find((p) => p.source === source);
+const previews = apiSignal<Plugin[]>("integrations", "previews", []);
+export const pluginBySource = (source: string) => plugins().find((p) => p.source === source) ?? previews().find((p) => p.source === source);
 
 /** Previews the plugin at a repo: the marketplace's own plugins and its fixture repo resolve; any other repo cannot be reached. */
 export function previewGithub(url: string): boolean {
   const source = url.trim().replace(/\/$/, "");
   if (pluginBySource(source)) return true;
-  if (source !== MARKETPLACE_FIXTURE_SOURCE) return false;
-  previews.update((all) => [
-    ...all,
-    {
-      name: "imported-notes",
-      displayName: source.split("/").pop() ?? source,
-      description: "Notes from GitHub",
-      category: null,
-      source,
-      skills: [
-        {
-          name: "imported-notes",
-          description: "Keep imported notes",
-          content: "---\nname: imported-notes\ndescription: Keep imported notes\n---\n\nRecord notes.\n",
-        },
-      ],
-      servers: [{ name: "notes", endpoint: MARKETPLACE_FIXTURE_ENDPOINT }],
-    },
-  ]);
+  const fixture = previewFixture();
+  if (!fixture || source !== fixture.source) return false;
+  previews.update((all) => [...all, fixture]);
   return true;
 }
 
 // Connected apps and their accounts.
-const connectedIds = signal(["gmail", "google-calendar", "google-drive", "slack"]);
-const accounts = signal<Record<string, string[]>>({
-  gmail: ["Gmail"],
-  "google-calendar": ["Google Calendar"],
-  "google-drive": ["Google Drive"],
-  slack: ["Slack"],
-});
+const connectedIds = apiSignal<string[]>("integrations", "connectedIds", []);
+const accounts = apiSignal<Record<string, string[]>>("integrations", "accounts", {});
 export const isConnected = (id: string) => connectedIds().includes(id);
 export const accountsOf = (id: string) => accounts()[id] ?? [];
 
@@ -264,7 +174,7 @@ export function removeAccount(id: string, index: number) {
 // Installed plugins: which parts they added, and which of their servers signed in.
 export type PluginPart = "connector" | "skills";
 type Install = { parts: PluginPart[]; signedIn: string[] };
-const installs = signal<Record<string, Install>>({});
+const installs = apiSignal<Record<string, Install>>("integrations", "installs", {});
 export const installOf = (source: string) => installs()[source];
 
 export function setPart(source: string, part: PluginPart, on: boolean) {
@@ -297,7 +207,7 @@ export const needsSignIn = (plugin: Plugin) => {
 const readyInstalls = () => connectorInstalls().filter(({ plugin }) => plugin.servers.length > 0 && !needsSignIn(plugin));
 
 // Servers a bot can use in a chat.
-const assigned = signal<string[]>([]);
+const assigned = apiSignal<string[]>("integrations", "assigned", []);
 export const isAssigned = (botId: string, source: string, server: string) => assigned().includes(`${botId}|${source}|${server}`);
 export const assign = (botId: string, source: string, server: string) => assigned.update((all) => [...all, `${botId}|${source}|${server}`]);
 
@@ -305,15 +215,20 @@ export const assign = (botId: string, source: string, server: string) => assigne
 export type McpServer = { id: string; name: string; endpoint: string };
 export type SourceKind = "mcp" | "api" | "graphql";
 export type Source = { id: string; name: string; kind: SourceKind; url: string };
-export const servers = signal<McpServer[]>([]);
-export const sources = signal<Source[]>([]);
-let nextId = 1;
+export const servers = apiSignal<McpServer[]>("integrations", "servers", []);
+export const sources = apiSignal<Source[]>("integrations", "sources", []);
+
+const nextId = (prefix: string, items: { id: string }[]) => {
+  let n = 1;
+  while (items.some((item) => item.id === `${prefix}${n}`)) n++;
+  return `${prefix}${n}`;
+};
 
 export function addServer(name: string, endpoint: string) {
-  if (!servers().some((s) => s.endpoint === endpoint)) servers.update((all) => [...all, { id: `server${nextId++}`, name, endpoint }]);
+  if (!servers().some((s) => s.endpoint === endpoint)) servers.update((all) => [...all, { id: nextId("server", all), name, endpoint }]);
 }
 export const addSource = (name: string, kind: SourceKind, url: string) =>
-  sources.update((all) => [...all, { id: `source${nextId++}`, name, kind, url }]);
+  sources.update((all) => [...all, { id: nextId("source", all), name, kind, url }]);
 export const removeSource = (id: string) => sources.update((all) => all.filter((s) => s.id !== id));
 
 /** Everything listed under "Your apps". */

@@ -1,4 +1,5 @@
-import { expect, open, test } from "nsh/test";
+import { expect, test } from "nsh/test";
+import { open } from "./test-app";
 
 const wideWindow = { width: 1280, height: 800 };
 

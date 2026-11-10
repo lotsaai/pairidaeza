@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#MISE description="Run checks and tests"
+#MISE depends=["check", "test"]

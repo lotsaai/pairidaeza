@@ -1,117 +1,18 @@
-import { signal, Text, View } from "nsh";
+import { Text, View } from "nsh";
 import { Select } from "nsh/base";
 import { Segmented, SettingsGroup, SettingsRow } from "../../components/settings";
 import { IconButton, popupClass } from "../../components/ui";
+import { apiSignal } from "../../api";
 
 type Mode = "never" | "auto" | "ask";
 type Effect = "always_allow" | "require_approval" | "deny";
 type Rule = { tool: string; effect: Effect };
 
-const mode = signal<Mode>("ask");
-const checkerAvailable = true;
-const rules = signal<Rule[]>([
-  { tool: "read_file", effect: "always_allow" },
-  { tool: "send_email", effect: "require_approval" },
-  { tool: "delete_email", effect: "deny" },
-]);
-const tools = [
-  "computer_observe",
-  "computer_act",
-  "browser_navigate",
-  "browser_snapshot",
-  "browser_act",
-  "list_files",
-  "read_file",
-  "write_file",
-  "attach_file",
-  "shell",
-  "user_computer_shell",
-  "user_computer_observe",
-  "user_computer_act",
-  "open_path",
-  "launch_app",
-  "request_takeover",
-  "ask_user",
-  "connect_app",
-  "message_user",
-  "request_secret",
-  "generate_secret",
-  "list_secrets",
-  "secret_request",
-  "forget_secret",
-  "render_plot",
-  "save_page",
-  "generate_image",
-  "generate_video",
-  "add_mcp_server",
-  "remember",
-  "save_shared_memory",
-  "web_search",
-  "web_fetch",
-  "cloud_agent_launch",
-  "cloud_agent_status",
-  "cloud_agent_reply",
-  "cloud_agent_cancel",
-  "request_purchase",
-  "purchase_status",
-  "paid_request",
-  "search_history",
-  "read_history",
-  "read_email",
-  "delete_email",
-  "claim_email_address",
-  "send_email",
-  "save_memory",
-  "recall_memory",
-  "forget_memory",
-  "task_catalog",
-  "scratchpad_list",
-  "scratchpad_add",
-  "scratchpad_update",
-  "scratchpad_complete",
-  "scratchpad_remove",
-  "board_tickets",
-  "ticket_get",
-  "ticket_create",
-  "ticket_update",
-  "ticket_comment",
-  "schedule_create",
-  "schedule_list",
-  "schedule_update",
-  "schedule_cancel",
-  "end_call",
-  "call_user",
-  "skill_read",
-  "skill_create",
-  "skill_update",
-  "skill_delete",
-  "run_subagent",
-  "create_space",
-  "spawn_bot",
-  "update_bot",
-  "list_fleet",
-  "create_group",
-  "update_group",
-  "organize_bot",
-  "set_child_instructions",
-  "set_child_bot_model",
-  "create_child_routine",
-  "archive_bot",
-  "message_bot",
-  "handoff_to_bot",
-  "update_preferences",
-  "feedback",
-  "connect_agent",
-  "respond_agent_connection",
-  "message_agent",
-];
-const explicitApproval: Record<string, true> = {
-  claim_email_address: true,
-  respond_agent_connection: true,
-  create_space: true,
-  set_child_instructions: true,
-  set_child_bot_model: true,
-};
+const mode = apiSignal<Mode>("approvals", "mode", "ask");
+const checkerAvailable = apiSignal("approvals", "checkerAvailable", false);
+const rules = apiSignal<Rule[]>("approvals", "rules", []);
+const tools = apiSignal<string[]>("approvals", "tools", []);
+const explicitApproval = apiSignal<Record<string, true>>("approvals", "explicitApproval", {});
 const label = (tool: string) => {
   const text = tool.replace(/_/g, " ").trim().toLowerCase();
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -134,7 +35,7 @@ const groups: { effect: Effect; title: string }[] = [
 
 export function ApprovalsSettings() {
   const available = () =>
-    tools
+    tools()
       .filter((tool) => !rules().some((rule) => rule.tool === tool))
       .map((tool) => ({ value: tool, title: label(tool) }))
       .sort((a, b) => a.title.localeCompare(b.title));
@@ -146,7 +47,7 @@ export function ApprovalsSettings() {
             {mode() === "never"
               ? "Asks only before purchases and the first use of your computer. Only Block rules apply."
               : mode() === "auto"
-                ? checkerAvailable
+                ? checkerAvailable()
                   ? "A model approves routine actions and asks you about the rest."
                   : "Add a model in Settings to use this."
                 : "Asks before sending, spending or changing anything in your apps."}
@@ -187,7 +88,9 @@ export function ApprovalsSettings() {
                       control={
                         <>
                           <Segmented
-                            options={explicitApproval[rule().tool] ? effects.filter((effect) => effect.value !== "always_allow") : effects}
+                            options={
+                              explicitApproval()[rule().tool] ? effects.filter((effect) => effect.value !== "always_allow") : effects
+                            }
                             value={rule().effect}
                             onChange={(effect) =>
                               rules.update((current) => current.map((item) => (item.tool === rule().tool ? { ...item, effect } : item)))

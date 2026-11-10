@@ -44,7 +44,7 @@ function AddMenu() {
     >
       <MenuRow icon="download" label="From GitHub" onSelect={() => go({ name: "github" })} />
       <MenuDivider />
-      <Each of={sourceChoices} key={(c) => c.label}>
+      <Each of={sourceChoices()} key={(c) => c.label}>
         {(choice) => (
           <MenuRow
             icon={choice().kind === "mcp" ? "plug" : "file-text"}

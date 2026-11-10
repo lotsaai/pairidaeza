@@ -1,8 +1,31 @@
 {
   "name": "pairidaezo",
-  "id": "com.example.pairidaezo",
+  "id": "ai.lotsa.pairidaezo",
   "version": "1.0.0",
   "build": 1,
   "rust": ".",
-  "theme": "theme.json"
+  "theme": "theme.json",
+  "tailwind": {
+    "spacing": 4,
+    "tracking": { "normal": 0 },
+    "radius": { "sm": 0.8, "md": 2.8, "lg": 4.8, "xl": 8.8, "2xl": 12.8 },
+    "shadow": {
+      "2xs": "0px 2px 3px 0px hsl(28 18% 25% / 0.09)",
+      "xs": "0px 2px 3px 0px hsl(28 18% 25% / 0.09)",
+      "sm": "0px 2px 3px 0px hsl(28 18% 25% / 0.18), 0px 1px 2px -1px hsl(28 18% 25% / 0.18)",
+      "": "0px 2px 3px 0px hsl(28 18% 25% / 0.18), 0px 1px 2px -1px hsl(28 18% 25% / 0.18)",
+      "md": "0px 2px 3px 0px hsl(28 18% 25% / 0.18), 0px 2px 4px -1px hsl(28 18% 25% / 0.18)",
+      "lg": "0px 2px 3px 0px hsl(28 18% 25% / 0.18), 0px 4px 6px -1px hsl(28 18% 25% / 0.18)",
+      "xl": "0px 2px 3px 0px hsl(28 18% 25% / 0.18), 0px 8px 10px -1px hsl(28 18% 25% / 0.18)",
+      "2xl": "0px 2px 3px 0px hsl(28 18% 25% / 0.45)"
+    }
+  },
+  "capabilities": {
+    "network": { "hosts": ["127.0.0.1", "localhost"] },
+    "process": { "env": ["PAIRIDAEZA_API_URL"] },
+    "clipboard": true,
+    "picker": true,
+    "statusBar": true,
+    "openUrl": { "schemes": ["https", "http", "mailto"] }
+  }
 }

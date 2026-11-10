@@ -1,5 +1,6 @@
-// Mock data; signals stay private, screens read and change them through these functions.
+// Workspace state is hydrated from the mock API before screens mount.
 import { batch, setColorScheme, signal } from "nsh";
+import { apiSignal, sessionUser, signInSession, signOutSession } from "./api";
 
 export type ComputerMode = "team" | "private" | "off";
 
@@ -185,270 +186,26 @@ const bot = (id: string, name: string, color: string, instructions: string): Bot
   computer: "team",
 });
 
-const bots = signal<Bot[]>([
-  bot("chief", "Chief of Staff", "#F2622A", "Keep my week on track. Flag what needs a decision from me, handle the rest."),
-  bot("inbox", "Inbox", "#9B5CF6", "Triage my email. Archive noise, draft routine replies, never send without asking."),
-  bot("researcher", "Researcher", "#3B82F6", "Dig through support, sales calls and analytics. Cite sources."),
-  bot("writer", "Writer", "#D9508A", "Write short, plain copy in our voice. No buzzwords."),
-  bot("sales", "Sales", "#3EC5A8", "Research accounts and draft outreach. Keep the CRM current."),
-  bot("finance", "Finance", "#F5A03C", "File receipts, reconcile the card, flag anything over budget."),
-  bot("triage", "Bug Triage", "#6A6BF5", "Label new issues, close duplicates, reproduce what you can."),
-]);
+const bots = apiSignal<Bot[]>("workspace", "bots", []);
+const chats = apiSignal<Chat[]>("workspace", "chats", []);
+const routines = apiSignal<Routine[]>("workspace", "routines", []);
+const pages = apiSignal<Page[]>("workspace", "pages", []);
+const sections = apiSignal<Section[]>("workspace", "sections", []);
+const spaces = apiSignal<Space[]>("workspace", "spaces", []);
+const organizations = apiSignal<Organization[]>("workspace", "organizations", []);
+const activeOrganizationId = apiSignal("workspace", "activeOrganizationId", "");
+const runs = apiSignal<Run[]>("workspace", "runs", []);
+const skills = apiSignal<Skill[]>("workspace", "skills", []);
+const artifacts = apiSignal<Artifact[]>("workspace", "artifacts", []);
 
-const chats = signal<Chat[]>(
-  (
-    [
-      {
-        id: "chief",
-        botIds: ["chief"],
-        title: "Chief of Staff",
-        preview: "three things matter this week: Board deck is due Thursday.",
-        time: "8:32 AM",
-        pinned: true,
-        unread: true,
-      },
-      {
-        id: "inbox",
-        botIds: ["inbox"],
-        title: "Inbox",
-        preview: "sent. the other 8 drafts are waiting in Drafts.",
-        time: "7:14 AM",
-        unread: true,
-      },
-      {
-        id: "researcher",
-        botIds: ["researcher"],
-        title: "Researcher",
-        preview: "here's the weekly growth review. best week since March.",
-        time: "9:04 AM",
-      },
-      { id: "writer", botIds: ["writer"], title: "Writer", preview: "cut it to 284 words. kept the customer quote.", time: "Fri" },
-      { id: "sales", botIds: ["sales"], title: "Sales", preview: "done. 40 accounts researched, 18 drafts ready.", time: "Yesterday" },
-      {
-        id: "finance",
-        botIds: ["finance"],
-        title: "Finance",
-        preview: "filed. 9 receipts, €1,284 total, nothing outstanding.",
-        time: "Yesterday",
-        sectionId: "ops",
-      },
-      {
-        id: "triage",
-        botIds: ["triage"],
-        title: "Bug Triage",
-        preview: "12 new issues: 3 duplicates closed, 2 reproduced.",
-        time: "Fri",
-        sectionId: "ops",
-      },
-      {
-        id: "launch",
-        botIds: ["researcher", "writer", "sales"],
-        title: "Launch team",
-        preview: "checked. nothing in the note contradicts what we quote.",
-        time: "9:55 AM",
-      },
-    ] satisfies Omit<Chat, "spaceId">[]
-  ).map((c): Chat => ({ ...c, spaceId: "personal" })),
-);
-
-const routines = signal<Routine[]>([
-  {
-    id: "r1",
-    botId: "inbox",
-    name: "Morning sweep",
-    instruction: "Archive newsletters and receipts, draft replies to anything routine, and send me a short summary of what needs me.",
-    schedule: "Weekdays at 7:00 AM",
-    active: true,
-    runs: ["Nov 6, 7:00 AM", "Nov 5, 7:00 AM", "Nov 4, 7:00 AM"],
-  },
-  {
-    id: "r2",
-    botId: "chief",
-    name: "Monday plan",
-    instruction: "Look at my calendar and open threads, and tell me the three things that matter this week.",
-    schedule: "Mondays at 8:30 AM",
-    active: true,
-    runs: ["Nov 2, 8:30 AM", "Oct 26, 8:30 AM"],
-  },
-  {
-    id: "r3",
-    botId: "researcher",
-    name: "Weekly growth review",
-    instruction: "Refresh the growth review page from billing, analytics and the support queue.",
-    schedule: "Mondays at 9:00 AM",
-    active: false,
-    runs: ["Nov 2, 9:00 AM"],
-  },
-]);
-
-const pages = signal<Page[]>([
-  {
-    id: "p1",
-    botId: "researcher",
-    title: "Weekly growth review",
-    updated: "Monday",
-    markdown:
-      "## Week of Nov 2\n\n| Metric | This week | Change |\n| --- | ---: | ---: |\n| New Team signups | 412 | +18% |\n| Annual share | 31% | +19 pts |\n| Churned seats | 37 | −6% |\n\nBest week since March. Annual pricing is doing the work.",
-  },
-  {
-    id: "p2",
-    botId: "researcher",
-    title: "Pricing feedback",
-    updated: "Today",
-    markdown:
-      "## What customers say\n\n- Seat math is confusing: guests count or not?\n- Annual discount is clear and liked.\n- Teams over 40 think Business is cheap.",
-  },
-  {
-    id: "p3",
-    botId: "chief",
-    title: "Board deck outline",
-    updated: "Yesterday",
-    markdown: "1. Where we are\n2. Pricing changes and early results\n3. Hiring plan\n4. Asks",
-  },
-  {
-    id: "p4",
-    botId: "sales",
-    title: "Accounts watch",
-    updated: "Fri",
-    markdown: "- **Orbit**: renewal in 30 days\n- **Northwind**: asked about guests",
-  },
-]);
-
-/** Today at `h:m`, or `daysAgo` days before, in ms. */
-function at(h: number, m: number, daysAgo = 0) {
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  d.setDate(d.getDate() - daysAgo);
-  return d.getTime();
-}
-
-const sections = signal<Section[]>([{ id: "ops", spaceId: "personal", name: "Operations" }]);
-
-const me: Member = { id: "u1", name: "Alex Rivera", email: "alex@example.com", role: "owner" };
-
-const spaces = signal<Space[]>([{ id: "personal", name: "Personal", isDefault: true, members: [me], openInvites: 0 }]);
-
-const organizations = signal<Organization[]>([
-  { id: "o1", name: "Alex Rivera" },
-  { id: "o2", name: "Northwind" },
-]);
-const activeOrganizationId = signal("o1");
-
-/** Newest first. */
-const runs = signal<Run[]>([
-  {
-    id: "run1",
-    chatId: "launch",
-    botId: "sales",
-    status: "running",
-    summary: "checking the Business tier notes",
-    time: "9:55 AM",
-    at: at(9, 55),
-  },
-  {
-    id: "run2",
-    chatId: "chief",
-    botId: "chief",
-    status: "waiting_input",
-    summary: "needs your OK to reply to the vendor",
-    time: "8:32 AM",
-    at: at(8, 32),
-  },
-  { id: "run3", chatId: "inbox", botId: "inbox", status: "completed", summary: "drafted 8 replies", time: "7:14 AM", at: at(7, 14) },
-  {
-    id: "run4",
-    chatId: "researcher",
-    botId: "researcher",
-    status: "completed",
-    summary: "finished Daily metrics",
-    time: "7:00 AM",
-    at: at(7, 0),
-  },
-  {
-    id: "run5",
-    chatId: "triage",
-    botId: "triage",
-    status: "failed",
-    summary: "couldn't reach the issue tracker",
-    time: "Fri",
-    at: at(16, 10, 3),
-  },
-  {
-    id: "run6",
-    chatId: "finance",
-    botId: "finance",
-    status: "cancelled",
-    summary: "stopped before filing",
-    time: "Yesterday",
-    at: at(18, 2, 1),
-  },
-]);
-
-const skills = signal<Skill[]>([
-  {
-    id: "k1",
-    name: "changelog",
-    description: "Write release notes in our voice from merged PRs.",
-    content:
-      "---\nname: changelog\ndescription: Write release notes in our voice from merged PRs.\n---\n\n# Changelog\n\nLead with what changed for the customer. One line each. No buzzwords.\n",
-    source: "user",
-  },
-  {
-    id: "k2",
-    name: "receipts",
-    description: "File receipts from email into the expense sheet.",
-    content:
-      "---\nname: receipts\ndescription: File receipts from email into the expense sheet.\n---\n\n# Receipts\n\nMatch each receipt to a card charge before filing it.\n",
-    source: "plugin",
-  },
-]);
-
-const artifacts = signal<Artifact[]>([
-  {
-    id: "a1",
-    name: "Weekly growth review",
-    description: "Signups, annual share and churn for the week of Nov 2.",
-    mimeType: "text/markdown",
-    version: 3,
-    versionCount: 3,
-    botId: "researcher",
-    createdAt: at(9, 4),
-    content:
-      "## Week of Nov 2\n\n| Metric | This week | Change |\n| --- | ---: | ---: |\n| New Team signups | 412 | +18% |\n| Annual share | 31% | +19 pts |\n",
-  },
-  {
-    id: "a2",
-    name: "Pricing changelog",
-    description: "Clearer seats, same prices.",
-    mimeType: "text/markdown",
-    version: 1,
-    versionCount: 1,
-    botId: "writer",
-    createdAt: at(9, 50),
-    content: "**Clearer seats, same prices.** Guests never count as seats, and the billing page now shows exactly who does.",
-  },
-  {
-    id: "a3",
-    name: "October receipts",
-    description: "9 receipts, €1,284 total.",
-    mimeType: "text/csv",
-    version: 1,
-    versionCount: 1,
-    botId: "finance",
-    createdAt: at(18, 0, 1),
-    content: "date,vendor,amount\n2026-10-03,Figma,45.00\n2026-10-07,AWS,812.40\n",
-  },
-]);
-
-/** Signed in, until Log out. */
-const signedIn = signal(true);
+const signedIn = () => sessionUser() !== null;
 
 /** Now, as of the last snooze change or wake: what snoozed and woken read. */
 const clock = signal(Date.now());
 
-const account = signal({ name: me.name, email: me.email });
-const appearance = signal<Appearance>("system");
-const defaultModel = signal("balanced");
+const account = apiSignal("workspace", "account", { name: "", email: "" });
+const appearance = apiSignal<Appearance>("workspace", "appearance", "system");
+const defaultModel = apiSignal("workspace", "defaultModel", "");
 
 /** The account's preferences beyond appearance: one record so Settings reads and writes them alike. */
 export interface Preferences {
@@ -462,16 +219,16 @@ export interface Preferences {
   letBotsUseComputer: boolean;
   autoUpdate: boolean;
 }
-const preferences = signal<Preferences>({
+const preferences = apiSignal<Preferences>("workspace", "preferences", {
   botStyle: "original",
-  language: "en",
-  timezone: "America/Los_Angeles",
-  sendWithEnter: true,
+  language: "",
+  timezone: "",
+  sendWithEnter: false,
   streamReplies: false,
-  showToolActivity: true,
+  showToolActivity: false,
   loadWebImages: false,
-  letBotsUseComputer: true,
-  autoUpdate: true,
+  letBotsUseComputer: false,
+  autoUpdate: false,
 });
 export const currentPreferences = () => preferences();
 export function setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]) {
@@ -480,98 +237,31 @@ export function setPreference<K extends keyof Preferences>(key: K, value: Prefer
 
 export const appVersion = "0.8.0";
 
-const messages = signal<Record<string, Message[]>>({
-  chief: [
-    { id: "c0", kind: "date", label: "Yesterday 4:35 PM" },
-    {
-      id: "c0a",
-      kind: "ask",
-      botId: "chief",
-      variant: "options",
-      text: "Hi Alex—what would you like Chief of Staff to help with?",
-      actions: [
-        { id: "plan", label: "Plan and prioritize" },
-        { id: "research", label: "Research and explain" },
-        { id: "draft", label: "Draft and review" },
-        { id: "other", label: "Something else" },
-      ],
-      answer: "plan",
-    },
-    { id: "c1", kind: "date", label: "Today 8:31 AM" },
-    { id: "c2", kind: "user", text: "what does this week look like?" },
-    {
-      id: "c3",
-      kind: "bot",
-      botId: "chief",
-      markdown:
-        "three things matter this week:\n\n1. **Board deck** is due Thursday. Finance has the October close ready; I booked you 2 hours Wednesday morning.\n2. **Helix Labs renewal.** Usage is down 30%. Sales has a call with them Tuesday at 2.\n3. **Hiring.** Two final-round candidates for the design role, Tuesday and Friday.\n\nI moved the vendor sync to next week to make room.",
-    },
-    { id: "c4", kind: "tool", botId: "chief", label: "Moved “Vendor sync” to Tue, Nov 17" },
-    {
-      id: "c5",
-      kind: "ask",
-      botId: "chief",
-      variant: "approval",
-      text: "Send email",
-      detail: "To: vendor-team@example.com\n“Moving our sync to next Tuesday, same time.”",
-      actions: [
-        { id: "allow", label: "Allow once" },
-        { id: "always", label: "Always allow this tool" },
-        { id: "deny", label: "Deny" },
-      ],
-    },
-    {
-      id: "c6",
-      kind: "ask",
-      botId: "chief",
-      variant: "instructions",
-      text: "Update instructions?",
-      detail: "Keep my week to three priorities. Ask before sending anything outside the team.",
-      actions: [
-        { id: "allow", label: "Apply" },
-        { id: "edit", label: "Edit" },
-        { id: "deny", label: "Dismiss" },
-      ],
-    },
-  ],
-  launch: [
-    { id: "l1", kind: "date", label: "Today 9:40 AM" },
-    {
-      id: "l2",
-      kind: "user",
-      text: "@Researcher what did customers say about the new pricing this week? @Writer turn it into a short changelog note when it's in.",
-    },
-    {
-      id: "l3",
-      kind: "bot",
-      botId: "researcher",
-      markdown:
-        "read 214 support threads, 37 sales calls and the pricing survey.\n\n1. **Annual discount lands.** 31% of new Team signups picked annual, up from 12%.\n2. **Seat math confuses people.** 18 tickets asked whether guests count as seats.\n3. **Business plan is underpriced** for teams over 40, per four sales calls.\n\nSources are in the thread notes.",
-    },
-    {
-      id: "l4",
-      kind: "bot",
-      botId: "writer",
-      markdown:
-        "draft for the changelog:\n\n> **Clearer seats, same prices.** Guests never count as seats, and the billing page now shows exactly who does. Annual plans still save two months.\n\nwant it shorter, or should @Sales check it against the Business tier notes first?",
-    },
-    { id: "l5", kind: "user", text: "looks good. @Sales sanity check the business tier bit" },
-    {
-      id: "l6",
-      kind: "bot",
-      botId: "sales",
-      markdown:
-        "checked. nothing in the note contradicts what we quote on calls. Orbit and Northwind both asked about guests, so this answers them too.",
-    },
-  ],
-});
+const messages = apiSignal<Record<string, Message[]>>("workspace", "messages", {});
 
 /** The message each chat was marked unread from: a divider shows before it until the chat is opened again. */
-const unreadMarkers = signal<Record<string, string>>({});
+const unreadMarkers = apiSignal<Record<string, string>>("workspace", "unreadMarkers", {});
 export const unreadMarker = (chatId: string) => unreadMarkers()[chatId];
 
-const approvalMode = signal<ApprovalMode>("auto");
-let nextId = 1;
+const approvalMode = apiSignal<ApprovalMode>("workspace", "approvalMode", "auto");
+
+function scheduleWake(until: number) {
+  setTimeout(
+    () => {
+      clock.set(Date.now());
+      if (until > Date.now()) scheduleWake(until);
+    },
+    Math.min(2147483647, Math.max(0, until - Date.now())),
+  );
+}
+
+export function restoreWorkspace() {
+  setColorScheme(appearance());
+  clock.set(Date.now());
+  for (const chat of chats()) {
+    if (chat.snoozedUntil != null && chat.snoozedUntil > Date.now()) scheduleWake(chat.snoozedUntil);
+  }
+}
 
 /** Chats not archived (tracked where read). */
 export const allChats = () => chats().filter((c) => !c.archived);
@@ -644,12 +334,12 @@ export function snoozeChat(id: string, until: number | null) {
     patchChat(id, { snoozedUntil: until, pinned: false });
     clock.set(Date.now());
   });
-  if (until !== null) setTimeout(() => clock.set(Date.now()), Math.max(0, until - Date.now()));
+  if (until !== null) scheduleWake(until);
 }
 
 /** Adds a section at the end of a space's sections; returns its id. */
 export function createSection(name: string, spaceId = currentSpaceId()): string {
-  const id = `s${nextId++}`;
+  const id = crypto.randomUUID();
   sections.update((all) => [...all, { id, spaceId, name: name.trim() }]);
   return id;
 }
@@ -683,9 +373,12 @@ export const botsInSpace = (spaceId: string) =>
 
 /** Creates a private space with only the user in it and makes it current; returns its id. */
 export function createSpace(name: string): string {
-  const id = `space${nextId++}`;
+  const id = crypto.randomUUID();
   batch(() => {
-    spaces.update((all) => [...all, { id, name: name.trim(), isDefault: false, members: [me], openInvites: 0 }]);
+    spaces.update((all) => [
+      ...all,
+      { id, name: name.trim(), isDefault: false, members: [{ id: sessionUser()?.id ?? "", ...account(), role: "owner" }], openInvites: 0 },
+    ]);
     currentSpace.set(id);
   });
   return id;
@@ -716,7 +409,7 @@ export function deleteSpace(id: string) {
 /** A new invite link to a space (a placeholder URL: no backend yet). */
 export function createInvite(spaceId: string): string {
   spaces.update((all) => all.map((s) => (s.id === spaceId ? { ...s, openInvites: s.openInvites + 1 } : s)));
-  return `https://pairidaeza.example/invite/${spaceId}-${nextId++}`;
+  return `https://pairidaeza.example/invite/${spaceId}-${crypto.randomUUID()}`;
 }
 
 export function cancelInvites(spaceId: string) {
@@ -745,7 +438,7 @@ export function leaveSpace(spaceId: string) {
 
 /** Creates a group chat of 2–10 bots at the top of the list; returns its id. */
 export function createGroup(name: string, botIds: string[]): string {
-  const id = `g${nextId++}`;
+  const id = crypto.randomUUID();
   const members = [...new Set(botIds)].slice(0, GROUP_MEMBER_MAX);
   chats.update((all) => [{ id, botIds: members, title: name.trim(), preview: "", time: "Now", spaceId: currentSpaceId() }, ...all]);
   return id;
@@ -774,7 +467,7 @@ function frontmatter(content: string, field: string) {
 
 /** Adds a skill from the template; returns its id. */
 export function createSkill(): string {
-  const id = `k${nextId++}`;
+  const id = crypto.randomUUID();
   skills.update((all) => [
     ...all,
     { id, name: "new-skill", description: frontmatter(NEW_SKILL_TEMPLATE, "description"), content: NEW_SKILL_TEMPLATE, source: "user" },
@@ -829,9 +522,13 @@ export const mobileAppUrls = {
 };
 export const docsUrl = "https://pairidaeza.example/docs";
 
-export const isSignedIn = () => signedIn();
-export const signOut = () => signedIn.set(false);
-export const signIn = () => signedIn.set(true);
+export const isSignedIn = signedIn;
+export const signOut = () => {
+  void signOutSession();
+};
+export const signIn = () => {
+  void signInSession();
+};
 
 export function renameSection(id: string, name: string) {
   sections.update((all) => all.map((s) => (s.id === id ? { ...s, name: name.trim() } : s)));
@@ -897,13 +594,15 @@ export function setApprovalMode(mode: ApprovalMode) {
 
 /** Creates a bot and its chat at the top of the list; returns the chat's id. */
 export function createBot(name: string, color: string): string {
-  const id = `b${nextId++}`;
+  const id = crypto.randomUUID();
   batch(() => {
     bots.update((all) => [...all, bot(id, name.trim(), color, "")]);
     chats.update((all) => [{ id, botIds: [id], title: name.trim(), preview: "New bot", time: "Now", spaceId: currentSpaceId() }, ...all]);
     messages.update((all) => ({
       ...all,
-      [id]: [{ id: `m${nextId++}`, kind: "bot", botId: id, markdown: `hi, I'm ${name.trim()}. tell me what you'd like me to take on.` }],
+      [id]: [
+        { id: crypto.randomUUID(), kind: "bot", botId: id, markdown: `hi, I'm ${name.trim()}. tell me what you'd like me to take on.` },
+      ],
     }));
   });
   return id;
@@ -924,7 +623,7 @@ export function updateRoutine(id: string, patch: Partial<Omit<Routine, "id" | "b
 
 /** Adds a paused routine to a bot; returns its id. */
 export function addRoutine(botId: string): string {
-  const id = `routine-${nextId++}`;
+  const id = crypto.randomUUID();
   routines.update((all) => [
     ...all,
     { id, botId, name: "New routine", instruction: "", schedule: "Weekdays at 9:00 AM", active: false, runs: [] },
@@ -943,7 +642,7 @@ export function runRoutine(id: string) {
   if (!routine) return;
   routines.update((all) => all.map((r) => (r.id === id ? { ...r, runs: ["Just now", ...r.runs] } : r)));
   append(routine.botId, {
-    id: `m${nextId++}`,
+    id: crypto.randomUUID(),
     kind: "bot",
     botId: routine.botId,
     markdown: `ran **${routine.name}**. results are in the thread notes.`,
@@ -959,10 +658,10 @@ export function sendMessage(chatId: string, text: string, reply?: Reply) {
   const trimmed = text.trim();
   const chat = chatById(chatId);
   if (!trimmed || !chat) return;
-  append(chatId, { id: `m${nextId++}`, kind: "user", text: trimmed, reply });
+  append(chatId, { id: crypto.randomUUID(), kind: "user", text: trimmed, reply });
   const botId = chat.botIds[0];
   setTimeout(
-    () => append(chatId, { id: `m${nextId++}`, kind: "bot", botId, markdown: "on it. I'll report back here when it's done." }),
+    () => append(chatId, { id: crypto.randomUUID(), kind: "bot", botId, markdown: "on it. I'll report back here when it's done." }),
     600,
   );
 }

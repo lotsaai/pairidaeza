@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "id": "1",
+      "kind": "login",
+      "title": "example.com",
+      "fields": {
+        "Site": "https://www.example.com"
+      },
+      "login": [
+        {
+          "id": 1,
+          "label": "Username",
+          "value": "alex@example.com",
+          "hidden": false
+        },
+        {
+          "id": 2,
+          "label": "Password",
+          "value": "example-password",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "kind": "card",
+      "title": "Card •••• 4242",
+      "fields": {
+        "Card number": "4242424242424242",
+        "Expiry": "12/28",
+        "Security code": "123",
+        "Name on card": "Alex Morgan",
+        "Billing address": "3"
+      },
+      "login": []
+    },
+    {
+      "id": "3",
+      "kind": "contact",
+      "title": "Home",
+      "fields": {
+        "Full name": "Alex Morgan",
+        "Address": "123 Main Street",
+        "City": "New York",
+        "State or region": "NY",
+        "ZIP or postal code": "10001",
+        "Country": "United States",
+        "Email": "alex@example.com"
+      },
+      "login": []
+    },
+    {
+      "id": "4",
+      "kind": "api_key",
+      "title": "api.example.com",
+      "fields": {
+        "Site": "https://api.example.com",
+        "Type": "bearer",
+        "Value": "example-api-key"
+      },
+      "login": []
+    },
+    {
+      "id": "5",
+      "kind": "variable",
+      "title": "DEPLOY_TOKEN",
+      "fields": {
+        "Variable name": "DEPLOY_TOKEN",
+        "Value": "example-token"
+      },
+      "login": []
+    }
+  ]
+}

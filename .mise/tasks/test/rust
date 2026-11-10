@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the Rust tests for this project"
+#MISE depends=["build:debug"]
+#MISE sources=["Cargo.toml", "Cargo.lock", "src/**/*.rs", "backend/**/*.rs", "backend/Cargo.toml", "backend/fixtures/**"]
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+cargo nextest run --workspace --cargo-quiet --show-progress=bar --status-level=slow "$@"

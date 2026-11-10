@@ -49,7 +49,7 @@ export function Segmented<V extends string>(props: { options: { value: V; label:
           <Toggle
             pressed={props.value === option().value}
             onChange={() => props.onChange(option().value)}
-            class="group min-h-8 justify-center rounded-md px-3 hover:bg-accent aria-pressed:bg-background aria-pressed:shadow-sm"
+            class="group min-h-8 justify-center rounded-md px-3 hover:bg-accent aria-pressed:bg-background aria-pressed:shadow-sm aria-pressed:shadow-shadow-color"
           >
             <Text class="text-sm text-muted-foreground group-aria-pressed:font-medium group-aria-pressed:text-foreground">
               {option().label}
@@ -112,7 +112,7 @@ export function SwitchSetting(props: {
           accessibilityLabel={props.label}
           onChange={({ checked }) => props.onChange(checked)}
           trackClass="h-6 w-10 rounded-full bg-input p-0.5 checked:bg-primary"
-          thumbClass="size-5 rounded-full bg-background shadow-sm checked:translate-x-4"
+          thumbClass="size-5 rounded-full bg-background shadow-sm shadow-shadow-color checked:translate-x-4"
         />
       }
     />

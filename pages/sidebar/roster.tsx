@@ -213,6 +213,7 @@ function ChatRow(props: { chatId: string }) {
   const compact = () => sidebarDensity() === "compact";
   const failed = () => status() === "failed";
   const unread = () => !!chat()?.unread;
+  const highlighted = () => (wide() && selectedChatId() === props.chatId) || dropKey() === props.chatId;
   const woke = () => {
     const c = chat();
     return !!c && hasWoken(c);
@@ -290,18 +291,22 @@ function ChatRow(props: { chatId: string }) {
               <ChatAvatar bots={botsOfChat(props.chatId)} size={compact() ? 28 : 40} />
               <View class="min-w-0 flex-1 gap-0.5">
                 <View class="flex-row items-center gap-2">
-                  <Text class={`flex-1 truncate text-sidebar-foreground ${unread() ? "font-semibold" : "font-medium"}`}>
+                  <Text
+                    class={`flex-1 truncate ${highlighted() ? "text-sidebar-accent-foreground" : "text-sidebar-foreground"} ${unread() ? "font-semibold" : "font-medium"}`}
+                  >
                     {chat()?.title}
                   </Text>
                   <If
                     when={woke()}
                     else={
                       <If when={!compact()}>
-                        <Text class="text-xs text-muted-foreground">{chat()?.time}</Text>
+                        <Text class={`text-xs ${highlighted() ? "text-sidebar-accent-foreground" : "text-muted-foreground"}`}>
+                          {chat()?.time}
+                        </Text>
                       </If>
                     }
                   >
-                    <Text class="text-xs font-medium text-foreground">Woke</Text>
+                    <Text class={`text-xs font-medium ${highlighted() ? "text-sidebar-accent-foreground" : "text-foreground"}`}>Woke</Text>
                   </If>
                   <If when={compact() && unread()}>
                     <View class="size-2 rounded-full bg-unread" accessibilityLabel="Unread" />
@@ -310,7 +315,11 @@ function ChatRow(props: { chatId: string }) {
                 <If when={compact() ? workLine() : (workLine() ?? chat()?.preview)}>
                   {(line) => (
                     <View class="flex-row items-center gap-2">
-                      <Text class={`flex-1 truncate text-sm ${failed() ? "text-destructive" : "text-muted-foreground"}`}>{line()}</Text>
+                      <Text
+                        class={`flex-1 truncate text-sm ${highlighted() ? "text-sidebar-accent-foreground" : failed() ? "text-destructive" : "text-muted-foreground"}`}
+                      >
+                        {line()}
+                      </Text>
                       <If when={!compact() && unread()}>
                         <View class="size-2 rounded-full bg-unread" accessibilityLabel="Unread" />
                       </If>

@@ -1,6 +1,11 @@
 // The shell: sidebar beside the chat on wide windows, a navigation stack on phones.
-import { mount, View } from "nsh";
+import "./fonts/IBMPlexSans[wdth,wght].ttf";
+import "./fonts/IBMPlexSerif-Regular.ttf";
+import "./fonts/IBMPlexMono-Regular.ttf";
+import { mount, Text, View } from "nsh";
 import { NavPage, NavStack } from "nsh/base";
+import { apiError, bootState, loadApi, retrySaving, sessionUser } from "./api";
+import { TextButton } from "./components/ui";
 import { mainView, nav, selectedChatId, sidebarShownWidth, wide } from "./nav";
 import { SidebarResizeHandle } from "./pages/sidebar/resize";
 import { BotPage, BotPanelSheet, BotPanelSide } from "./pages/BotPanel";
@@ -13,14 +18,16 @@ import { NewGroupPage, NewGroupPanelSheet, NewGroupPanelSide } from "./pages/New
 import { NewSpaceDialog } from "./pages/NewSpace";
 import { SpaceSettingsDialog } from "./pages/SpaceSettings";
 import { SettingsModal } from "./pages/Settings";
-import { botById, chatById, isSignedIn } from "./store";
+import { allChats, botById, chatById, restoreWorkspace } from "./store";
 import { InviteDialog, MobileAppDialog } from "./pages/AccountDialogs";
 import { ArtifactsPage } from "./pages/Artifacts";
 import { SignedOut } from "./pages/SignedOut";
 import { SkillsDialog } from "./pages/Skills";
 import { IntegrationsModal } from "./pages/Integrations";
 
-function App() {
+function Shell() {
+  restoreWorkspace();
+  if (!chatById(selectedChatId())) selectedChatId.set(allChats()[0]?.id ?? "");
   return (
     <View class="flex-1 bg-background">
       <If
@@ -98,10 +105,44 @@ function App() {
       <IntegrationsModal />
       <InviteDialog />
       <MobileAppDialog />
-      <If when={!isSignedIn()}>
-        <View class="absolute inset-0">
-          <SignedOut />
+      <If when={apiError()}>
+        <View class="flex-row items-center justify-center gap-3 border-t border-border bg-background p-3">
+          <Text class="text-destructive">{apiError()}</Text>
+          <TextButton
+            label="Retry saving"
+            onPress={() => {
+              void retrySaving();
+            }}
+          />
         </View>
+      </If>
+    </View>
+  );
+}
+
+function App() {
+  void loadApi();
+  return (
+    <View class="flex-1 bg-background">
+      <If
+        when={bootState() === "ready"}
+        else={
+          <View class="flex-1 items-center justify-center gap-3 p-6">
+            <If when={bootState() === "error"} else={<Text class="text-muted-foreground">Loading workspace</Text>}>
+              <Text class="text-destructive">{apiError()}</Text>
+              <TextButton
+                label="Retry"
+                onPress={() => {
+                  void loadApi();
+                }}
+              />
+            </If>
+          </View>
+        }
+      >
+        <If when={sessionUser()} else={<SignedOut />}>
+          <Shell />
+        </If>
       </If>
     </View>
   );

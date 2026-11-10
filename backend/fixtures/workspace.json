@@ -1,0 +1,493 @@
+{
+  "bots": [
+    {
+      "id": "chief",
+      "name": "Chief of Staff",
+      "color": "#F2622A",
+      "instructions": "Keep my week on track. Flag what needs a decision from me, handle the rest.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "inbox",
+      "name": "Inbox",
+      "color": "#9B5CF6",
+      "instructions": "Triage my email. Archive noise, draft routine replies, never send without asking.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "researcher",
+      "name": "Researcher",
+      "color": "#3B82F6",
+      "instructions": "Dig through support, sales calls and analytics. Cite sources.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "writer",
+      "name": "Writer",
+      "color": "#D9508A",
+      "instructions": "Write short, plain copy in our voice. No buzzwords.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "sales",
+      "name": "Sales",
+      "color": "#3EC5A8",
+      "instructions": "Research accounts and draft outreach. Keep the CRM current.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "finance",
+      "name": "Finance",
+      "color": "#F5A03C",
+      "instructions": "File receipts, reconcile the card, flag anything over budget.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    },
+    {
+      "id": "triage",
+      "name": "Bug Triage",
+      "color": "#6A6BF5",
+      "instructions": "Label new issues, close duplicates, reproduce what you can.",
+      "model": "default",
+      "notifyOnFinish": true,
+      "computer": "team"
+    }
+  ],
+  "chats": [
+    {
+      "id": "chief",
+      "botIds": ["chief"],
+      "title": "Chief of Staff",
+      "preview": "three things matter this week: Board deck is due Thursday.",
+      "time": "8:32 AM",
+      "pinned": true,
+      "unread": true,
+      "spaceId": "personal"
+    },
+    {
+      "id": "inbox",
+      "botIds": ["inbox"],
+      "title": "Inbox",
+      "preview": "sent. the other 8 drafts are waiting in Drafts.",
+      "time": "7:14 AM",
+      "unread": true,
+      "spaceId": "personal"
+    },
+    {
+      "id": "researcher",
+      "botIds": ["researcher"],
+      "title": "Researcher",
+      "preview": "here's the weekly growth review. best week since March.",
+      "time": "9:04 AM",
+      "spaceId": "personal"
+    },
+    {
+      "id": "writer",
+      "botIds": ["writer"],
+      "title": "Writer",
+      "preview": "cut it to 284 words. kept the customer quote.",
+      "time": "Fri",
+      "spaceId": "personal"
+    },
+    {
+      "id": "sales",
+      "botIds": ["sales"],
+      "title": "Sales",
+      "preview": "done. 40 accounts researched, 18 drafts ready.",
+      "time": "Yesterday",
+      "spaceId": "personal"
+    },
+    {
+      "id": "finance",
+      "botIds": ["finance"],
+      "title": "Finance",
+      "preview": "filed. 9 receipts, €1,284 total, nothing outstanding.",
+      "time": "Yesterday",
+      "sectionId": "ops",
+      "spaceId": "personal"
+    },
+    {
+      "id": "triage",
+      "botIds": ["triage"],
+      "title": "Bug Triage",
+      "preview": "12 new issues: 3 duplicates closed, 2 reproduced.",
+      "time": "Fri",
+      "sectionId": "ops",
+      "spaceId": "personal"
+    },
+    {
+      "id": "launch",
+      "botIds": ["researcher", "writer", "sales"],
+      "title": "Launch team",
+      "preview": "checked. nothing in the note contradicts what we quote.",
+      "time": "9:55 AM",
+      "spaceId": "personal"
+    }
+  ],
+  "routines": [
+    {
+      "id": "r1",
+      "botId": "inbox",
+      "name": "Morning sweep",
+      "instruction": "Archive newsletters and receipts, draft replies to anything routine, and send me a short summary of what needs me.",
+      "schedule": "Weekdays at 7:00 AM",
+      "active": true,
+      "runs": ["Nov 6, 7:00 AM", "Nov 5, 7:00 AM", "Nov 4, 7:00 AM"]
+    },
+    {
+      "id": "r2",
+      "botId": "chief",
+      "name": "Monday plan",
+      "instruction": "Look at my calendar and open threads, and tell me the three things that matter this week.",
+      "schedule": "Mondays at 8:30 AM",
+      "active": true,
+      "runs": ["Nov 2, 8:30 AM", "Oct 26, 8:30 AM"]
+    },
+    {
+      "id": "r3",
+      "botId": "researcher",
+      "name": "Weekly growth review",
+      "instruction": "Refresh the growth review page from billing, analytics and the support queue.",
+      "schedule": "Mondays at 9:00 AM",
+      "active": false,
+      "runs": ["Nov 2, 9:00 AM"]
+    }
+  ],
+  "pages": [
+    {
+      "id": "p1",
+      "botId": "researcher",
+      "title": "Weekly growth review",
+      "updated": "Monday",
+      "markdown": "## Week of Nov 2\n\n| Metric | This week | Change |\n| --- | ---: | ---: |\n| New Team signups | 412 | +18% |\n| Annual share | 31% | +19 pts |\n| Churned seats | 37 | −6% |\n\nBest week since March. Annual pricing is doing the work."
+    },
+    {
+      "id": "p2",
+      "botId": "researcher",
+      "title": "Pricing feedback",
+      "updated": "Today",
+      "markdown": "## What customers say\n\n- Seat math is confusing: guests count or not?\n- Annual discount is clear and liked.\n- Teams over 40 think Business is cheap."
+    },
+    {
+      "id": "p3",
+      "botId": "chief",
+      "title": "Board deck outline",
+      "updated": "Yesterday",
+      "markdown": "1. Where we are\n2. Pricing changes and early results\n3. Hiring plan\n4. Asks"
+    },
+    {
+      "id": "p4",
+      "botId": "sales",
+      "title": "Accounts watch",
+      "updated": "Fri",
+      "markdown": "- **Orbit**: renewal in 30 days\n- **Northwind**: asked about guests"
+    }
+  ],
+  "sections": [
+    {
+      "id": "ops",
+      "spaceId": "personal",
+      "name": "Operations"
+    }
+  ],
+  "spaces": [
+    {
+      "id": "personal",
+      "name": "Personal",
+      "isDefault": true,
+      "members": [
+        {
+          "id": "u1",
+          "name": "Alex Rivera",
+          "email": "alex@example.com",
+          "role": "owner"
+        }
+      ],
+      "openInvites": 0
+    }
+  ],
+  "organizations": [
+    {
+      "id": "o1",
+      "name": "Alex Rivera"
+    },
+    {
+      "id": "o2",
+      "name": "Northwind"
+    }
+  ],
+  "activeOrganizationId": "o1",
+  "runs": [
+    {
+      "id": "run1",
+      "chatId": "launch",
+      "botId": "sales",
+      "status": "running",
+      "summary": "checking the Business tier notes",
+      "time": "9:55 AM",
+      "at": 1794246900000
+    },
+    {
+      "id": "run2",
+      "chatId": "chief",
+      "botId": "chief",
+      "status": "waiting_input",
+      "summary": "needs your OK to reply to the vendor",
+      "time": "8:32 AM",
+      "at": 1794241920000
+    },
+    {
+      "id": "run3",
+      "chatId": "inbox",
+      "botId": "inbox",
+      "status": "completed",
+      "summary": "drafted 8 replies",
+      "time": "7:14 AM",
+      "at": 1794237240000
+    },
+    {
+      "id": "run4",
+      "chatId": "researcher",
+      "botId": "researcher",
+      "status": "completed",
+      "summary": "finished Daily metrics",
+      "time": "7:00 AM",
+      "at": 1794236400000
+    },
+    {
+      "id": "run5",
+      "chatId": "triage",
+      "botId": "triage",
+      "status": "failed",
+      "summary": "couldn't reach the issue tracker",
+      "time": "Fri",
+      "at": 1794010200000
+    },
+    {
+      "id": "run6",
+      "chatId": "finance",
+      "botId": "finance",
+      "status": "cancelled",
+      "summary": "stopped before filing",
+      "time": "Yesterday",
+      "at": 1794189720000
+    }
+  ],
+  "skills": [
+    {
+      "id": "k1",
+      "name": "changelog",
+      "description": "Write release notes in our voice from merged PRs.",
+      "content": "---\nname: changelog\ndescription: Write release notes in our voice from merged PRs.\n---\n\n# Changelog\n\nLead with what changed for the customer. One line each. No buzzwords.\n",
+      "source": "user"
+    },
+    {
+      "id": "k2",
+      "name": "receipts",
+      "description": "File receipts from email into the expense sheet.",
+      "content": "---\nname: receipts\ndescription: File receipts from email into the expense sheet.\n---\n\n# Receipts\n\nMatch each receipt to a card charge before filing it.\n",
+      "source": "plugin"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "a1",
+      "name": "Weekly growth review",
+      "description": "Signups, annual share and churn for the week of Nov 2.",
+      "mimeType": "text/markdown",
+      "version": 3,
+      "versionCount": 3,
+      "botId": "researcher",
+      "createdAt": 1794243840000,
+      "content": "## Week of Nov 2\n\n| Metric | This week | Change |\n| --- | ---: | ---: |\n| New Team signups | 412 | +18% |\n| Annual share | 31% | +19 pts |\n"
+    },
+    {
+      "id": "a2",
+      "name": "Pricing changelog",
+      "description": "Clearer seats, same prices.",
+      "mimeType": "text/markdown",
+      "version": 1,
+      "versionCount": 1,
+      "botId": "writer",
+      "createdAt": 1794246600000,
+      "content": "**Clearer seats, same prices.** Guests never count as seats, and the billing page now shows exactly who does."
+    },
+    {
+      "id": "a3",
+      "name": "October receipts",
+      "description": "9 receipts, €1,284 total.",
+      "mimeType": "text/csv",
+      "version": 1,
+      "versionCount": 1,
+      "botId": "finance",
+      "createdAt": 1794189600000,
+      "content": "date,vendor,amount\n2026-10-03,Figma,45.00\n2026-10-07,AWS,812.40\n"
+    }
+  ],
+  "account": {
+    "name": "Alex Rivera",
+    "email": "alex@example.com"
+  },
+  "appearance": "system",
+  "defaultModel": "balanced",
+  "preferences": {
+    "botStyle": "original",
+    "language": "en",
+    "timezone": "America/Los_Angeles",
+    "sendWithEnter": true,
+    "streamReplies": false,
+    "showToolActivity": true,
+    "loadWebImages": false,
+    "letBotsUseComputer": true,
+    "autoUpdate": true
+  },
+  "messages": {
+    "chief": [
+      {
+        "id": "c0",
+        "kind": "date",
+        "label": "Yesterday 4:35 PM"
+      },
+      {
+        "id": "c0a",
+        "kind": "ask",
+        "botId": "chief",
+        "variant": "options",
+        "text": "Hi Alex—what would you like Chief of Staff to help with?",
+        "actions": [
+          {
+            "id": "plan",
+            "label": "Plan and prioritize"
+          },
+          {
+            "id": "research",
+            "label": "Research and explain"
+          },
+          {
+            "id": "draft",
+            "label": "Draft and review"
+          },
+          {
+            "id": "other",
+            "label": "Something else"
+          }
+        ],
+        "answer": "plan"
+      },
+      {
+        "id": "c1",
+        "kind": "date",
+        "label": "Today 8:31 AM"
+      },
+      {
+        "id": "c2",
+        "kind": "user",
+        "text": "what does this week look like?"
+      },
+      {
+        "id": "c3",
+        "kind": "bot",
+        "botId": "chief",
+        "markdown": "three things matter this week:\n\n1. **Board deck** is due Thursday. Finance has the October close ready; I booked you 2 hours Wednesday morning.\n2. **Helix Labs renewal.** Usage is down 30%. Sales has a call with them Tuesday at 2.\n3. **Hiring.** Two final-round candidates for the design role, Tuesday and Friday.\n\nI moved the vendor sync to next week to make room."
+      },
+      {
+        "id": "c4",
+        "kind": "tool",
+        "botId": "chief",
+        "label": "Moved “Vendor sync” to Tue, Nov 17"
+      },
+      {
+        "id": "c5",
+        "kind": "ask",
+        "botId": "chief",
+        "variant": "approval",
+        "text": "Send email",
+        "detail": "To: vendor-team@example.com\n“Moving our sync to next Tuesday, same time.”",
+        "actions": [
+          {
+            "id": "allow",
+            "label": "Allow once"
+          },
+          {
+            "id": "always",
+            "label": "Always allow this tool"
+          },
+          {
+            "id": "deny",
+            "label": "Deny"
+          }
+        ]
+      },
+      {
+        "id": "c6",
+        "kind": "ask",
+        "botId": "chief",
+        "variant": "instructions",
+        "text": "Update instructions?",
+        "detail": "Keep my week to three priorities. Ask before sending anything outside the team.",
+        "actions": [
+          {
+            "id": "allow",
+            "label": "Apply"
+          },
+          {
+            "id": "edit",
+            "label": "Edit"
+          },
+          {
+            "id": "deny",
+            "label": "Dismiss"
+          }
+        ]
+      }
+    ],
+    "launch": [
+      {
+        "id": "l1",
+        "kind": "date",
+        "label": "Today 9:40 AM"
+      },
+      {
+        "id": "l2",
+        "kind": "user",
+        "text": "@Researcher what did customers say about the new pricing this week? @Writer turn it into a short changelog note when it's in."
+      },
+      {
+        "id": "l3",
+        "kind": "bot",
+        "botId": "researcher",
+        "markdown": "read 214 support threads, 37 sales calls and the pricing survey.\n\n1. **Annual discount lands.** 31% of new Team signups picked annual, up from 12%.\n2. **Seat math confuses people.** 18 tickets asked whether guests count as seats.\n3. **Business plan is underpriced** for teams over 40, per four sales calls.\n\nSources are in the thread notes."
+      },
+      {
+        "id": "l4",
+        "kind": "bot",
+        "botId": "writer",
+        "markdown": "draft for the changelog:\n\n> **Clearer seats, same prices.** Guests never count as seats, and the billing page now shows exactly who does. Annual plans still save two months.\n\nwant it shorter, or should @Sales check it against the Business tier notes first?"
+      },
+      {
+        "id": "l5",
+        "kind": "user",
+        "text": "looks good. @Sales sanity check the business tier bit"
+      },
+      {
+        "id": "l6",
+        "kind": "bot",
+        "botId": "sales",
+        "markdown": "checked. nothing in the note contradicts what we quote on calls. Orbit and Northwind both asked about guests, so this answers them too."
+      }
+    ]
+  },
+  "unreadMarkers": {},
+  "approvalMode": "auto"
+}

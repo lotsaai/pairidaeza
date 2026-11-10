@@ -23,7 +23,7 @@ export function SectionDialog() {
       onOpenChange={({ open }) => !open && close()}
       animation="fade"
       backdropClass="bg-overlay"
-      class="mt-24 w-full max-w-sm gap-4 self-center rounded-(--radius) border border-border bg-popover p-5 shadow-lg"
+      class="mt-24 w-full max-w-sm gap-4 self-center rounded-(--radius) border border-border bg-popover p-5 shadow-lg shadow-shadow-color"
     >
       <View class="flex-row items-center justify-between">
         <Text role="header" class="text-lg font-semibold text-popover-foreground">

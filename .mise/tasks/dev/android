@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the Pairidaeza app on an Android device or emulator"
+#MISE daemons=["api"]
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+api_url=${PAIRIDAEZA_API_URL:-http://127.0.0.1:17810}
+if [[ $api_url =~ ^https?://(127\.0\.0\.1|localhost):([0-9]+)(/|$) ]]; then
+	adb reverse "tcp:17810" "tcp:${BASH_REMATCH[2]}"
+fi
+
+exec nsh dev . --target android "$@"

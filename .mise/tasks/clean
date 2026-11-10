@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#MISE description="Remove Cargo build artifacts"
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+cargo clean

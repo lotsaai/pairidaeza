@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the NSH tests against the managed API"
+#MISE depends=["build:debug"]
+#MISE daemons=["api"]
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+nsh test "$@"

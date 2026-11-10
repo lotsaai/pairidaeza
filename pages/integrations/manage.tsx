@@ -22,7 +22,7 @@ function SourceRow(props: { source: Source }) {
 export function Manage() {
   return (
     <Grid>
-      <Each of={apps.filter((a) => isConnected(a.id))} key={(a) => a.id}>
+      <Each of={apps().filter((a) => isConnected(a.id))} key={(a) => a.id}>
         {(app) => (
           <Cell>
             <AppTile app={app()} />

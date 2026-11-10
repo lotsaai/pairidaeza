@@ -2,24 +2,25 @@ import { signal, Text, View } from "nsh";
 import { Button, Input } from "nsh/base";
 import { Segmented, SelectField, SettingsGroup } from "../../components/settings";
 import { Field, fieldClass, TextButton } from "../../components/ui";
+import { apiSignal } from "../../api";
 
 type Provider = "supermemory" | "serenity" | "honcho";
 type Scope = "isolated" | "shared";
 type Mode = "cloud" | "local";
 
-const provider = signal<Provider>("supermemory");
-const connected = signal<{ name: string; detail: string } | null>(null);
+const provider = apiSignal<Provider>("memory", "provider", "supermemory");
+const connected = apiSignal<{ name: string; detail: string } | null>("memory", "connected", null);
 const adding = signal(false);
-const scope = signal<Scope>("isolated");
-const mode = signal<Mode>("cloud");
-const baseUrl = signal("");
+const scope = apiSignal<Scope>("memory", "scope", "isolated");
+const mode = apiSignal<Mode>("memory", "mode", "cloud");
+const baseUrl = apiSignal("memory", "baseUrl", "");
 const apiKey = signal("");
-const workspace = signal("");
-const userPeer = signal("");
-const endpoint = signal("");
+const workspace = apiSignal("memory", "workspace", "");
+const userPeer = apiSignal("memory", "userPeer", "");
+const endpoint = apiSignal("memory", "endpoint", "");
 const endpointError = signal(false);
-const brainLabel = signal("");
-const allowWrites = signal<"recall" | "write">("recall");
+const brainLabel = apiSignal("memory", "brainLabel", "");
+const allowWrites = apiSignal<"recall" | "write">("memory", "allowWrites", "recall");
 const resourceId = /^[a-zA-Z0-9_-]{1,512}$/;
 
 function ready() {
@@ -46,6 +47,7 @@ function connect() {
           ? "Supermemory Cloud"
           : `Self-hosted (${baseUrl().trim()})`;
   const name = provider() === "honcho" ? "Honcho" : provider() === "serenity" ? "Serenity" : "Supermemory";
+  // The mock stores the connection summary, never the entered API key.
   connected.set({ name, detail });
   apiKey.set("");
 }

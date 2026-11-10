@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#MISE description="Build the application (Debug)"
+#MISE depends=["build:debug"]

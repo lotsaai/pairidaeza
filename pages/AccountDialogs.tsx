@@ -5,7 +5,8 @@ import { fieldClass, Icon, IconButton, type IconName, TextButton } from "../comp
 import { inviteOpen, mobileAppOpen } from "../nav";
 import { mobileAppUrls, referral } from "../store";
 
-const dialogClass = "mt-24 w-full max-w-sm gap-4 self-center rounded-(--radius) border border-border bg-popover p-5 shadow-lg";
+const dialogClass =
+  "mt-24 w-full max-w-sm gap-4 self-center rounded-(--radius) border border-border bg-popover p-5 shadow-lg shadow-shadow-color";
 
 const copied = signal(false);
 

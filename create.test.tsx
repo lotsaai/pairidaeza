@@ -1,4 +1,5 @@
-import { open, test } from "nsh/test";
+import { test } from "nsh/test";
+import { open } from "./test-app";
 
 test("a group needs a name and two bots", async () => {
   const app = await open("./App.tsx", { width: 1400, height: 900 });

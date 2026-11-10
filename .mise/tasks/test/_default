@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the full test suite: Rust nextest and NSH"
+#MISE depends=["test:rust", "test:ui"]

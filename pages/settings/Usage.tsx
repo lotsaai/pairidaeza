@@ -1,6 +1,7 @@
 import { Text, View } from "nsh";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "nsh/base";
 import { SettingsGroup } from "../../components/settings";
+import { apiSignal } from "../../api";
 
 type UsageTotals = {
   inputTokens: number | null;
@@ -15,34 +16,7 @@ type UsageSummary = UsageTotals & {
   models?: (Required<UsageTotals> & { provider: string; model: string })[];
 };
 
-const usage: UsageSummary = {
-  runs: 128,
-  inputTokens: 824000,
-  outputTokens: 132000,
-  totalTokens: 956000,
-  costUsd: 4.27,
-  modelCalls: 146,
-  models: [
-    {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      modelCalls: 92,
-      inputTokens: 624000,
-      outputTokens: 102000,
-      totalTokens: 726000,
-      costUsd: 3.65,
-    },
-    {
-      provider: "openai-codex",
-      model: "gpt-5.3-codex",
-      modelCalls: 54,
-      inputTokens: 200000,
-      outputTokens: 30000,
-      totalTokens: 230000,
-      costUsd: 0.62,
-    },
-  ],
-};
+const usage = apiSignal<UsageSummary>("usage", "summary", { runs: 0, inputTokens: null, outputTokens: null });
 
 const number = (value: number | null | undefined) => (value == null ? "—" : value.toLocaleString("en-US"));
 const cost = (value: number | null | undefined) =>
@@ -61,18 +35,18 @@ export function UsageSettings() {
       <View class="flex-row gap-3">
         <View class="flex-1 gap-1 rounded-xl border border-border px-4 py-3">
           <Text class="text-sm text-muted-foreground">Runs</Text>
-          <Text class="text-lg font-medium tabular-nums text-foreground">{number(usage.runs)}</Text>
+          <Text class="text-lg font-medium tabular-nums text-foreground">{number(usage().runs)}</Text>
         </View>
         <View class="flex-1 gap-1 rounded-xl border border-border px-4 py-3">
           <Text class="text-sm text-muted-foreground">Tokens</Text>
-          <Text class="text-lg font-medium tabular-nums text-foreground">{number(usage.totalTokens)}</Text>
+          <Text class="text-lg font-medium tabular-nums text-foreground">{number(usage().totalTokens)}</Text>
         </View>
         <View class="flex-1 gap-1 rounded-xl border border-border px-4 py-3">
           <Text class="text-sm text-muted-foreground">Cost</Text>
-          <Text class="text-lg font-medium tabular-nums text-foreground">{cost(usage.costUsd)}</Text>
+          <Text class="text-lg font-medium tabular-nums text-foreground">{cost(usage().costUsd)}</Text>
         </View>
       </View>
-      <If when={(usage.models?.length ?? 0) > 0}>
+      <If when={(usage().models?.length ?? 0) > 0}>
         <SettingsGroup>
           <Table accessibilityLabel="Usage" class="px-2">
             <TableHeader>
@@ -95,7 +69,7 @@ export function UsageSettings() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <Each of={usage.models ?? []} key={(row) => `${row.provider}:${row.model}`}>
+              <Each of={usage().models ?? []} key={(row) => `${row.provider}:${row.model}`}>
                 {(row) => (
                   <TableRow class="flex-row border-b border-border">
                     <TableCell class="flex-[2] px-1 py-3">

@@ -67,7 +67,7 @@ export function ChatView(props: { chatId: string }) {
             <Button
               accessibilityLabel="Jump to latest"
               onPress={() => list?.scrollToEnd({ animated: true })}
-              class="size-10 items-center justify-center rounded-full border border-border bg-card shadow-md hover:bg-accent"
+              class="size-10 items-center justify-center rounded-full border border-border bg-card shadow-md shadow-shadow-color hover:bg-accent"
             >
               <Icon name="arrow-down" size={17} />
             </Button>

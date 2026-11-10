@@ -387,8 +387,10 @@ function Wide() {
               onPress={() => show(s().id)}
               class="group min-h-9 flex-row items-center gap-2.5 rounded-lg px-2.5 hover:bg-sidebar-accent selected:bg-sidebar-accent"
             >
-              <Icon name={s().icon} size={16} tone={shown() === s().id ? "foreground" : "muted-foreground"} />
-              <Text class="text-muted-foreground group-selected:font-medium group-selected:text-foreground">{s().label}</Text>
+              <Icon name={s().icon} size={16} tone={shown() === s().id ? "sidebar-accent-foreground" : "sidebar-foreground"} />
+              <Text class="text-sidebar-foreground group-hover:text-sidebar-accent-foreground group-selected:font-medium group-selected:text-sidebar-accent-foreground">
+                {s().label}
+              </Text>
             </Button>
           )}
         </Each>

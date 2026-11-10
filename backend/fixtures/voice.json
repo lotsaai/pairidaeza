@@ -1,0 +1,92 @@
+{
+  "providers": [
+    {
+      "value": "macos",
+      "title": "Server (Mac)"
+    },
+    {
+      "value": "elevenlabs",
+      "title": "ElevenLabs"
+    },
+    {
+      "value": "openai",
+      "title": "OpenAI"
+    },
+    {
+      "value": "cartesia",
+      "title": "Cartesia"
+    },
+    {
+      "value": "fish-audio",
+      "title": "Fish Audio"
+    },
+    {
+      "value": "openai-compatible",
+      "title": "Self-hosted"
+    }
+  ],
+  "openAiVoices": [
+    {
+      "value": "alloy",
+      "title": "Alloy (Neutral)"
+    },
+    {
+      "value": "ash",
+      "title": "Ash (Clear)"
+    },
+    {
+      "value": "ballad",
+      "title": "Ballad (Warm)"
+    },
+    {
+      "value": "cedar",
+      "title": "Cedar"
+    },
+    {
+      "value": "coral",
+      "title": "Coral (Bright)"
+    },
+    {
+      "value": "echo",
+      "title": "Echo (Even)"
+    },
+    {
+      "value": "fable",
+      "title": "Fable (Narrative)"
+    },
+    {
+      "value": "marin",
+      "title": "Marin"
+    },
+    {
+      "value": "onyx",
+      "title": "Onyx (Deep)"
+    },
+    {
+      "value": "nova",
+      "title": "Nova (Energetic)"
+    },
+    {
+      "value": "sage",
+      "title": "Sage (Calm)"
+    },
+    {
+      "value": "shimmer",
+      "title": "Shimmer (Soft)"
+    },
+    {
+      "value": "verse",
+      "title": "Verse (Expressive)"
+    }
+  ],
+  "provider": "openai",
+  "connected": ["openai"],
+  "serverUrl": "",
+  "speechModel": "",
+  "ttsModel": "",
+  "sttModel": "",
+  "voice": {
+    "openai": "alloy",
+    "openai-compatible": "af_heart"
+  }
+}

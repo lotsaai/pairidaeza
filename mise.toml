@@ -1,11 +1,63 @@
+redactions = ["*_TOKEN", "*_SECRET", "*_KEY", "*_PASSWORD"]
+min_version = "2026.10.4"
+
+[settings]
+experimental = true
+lockfile = true
+env_shell_expand = true
+npm.package_manager = "bun"
+idiomatic_version_file_enable_tools = ["rust"]
+python.uv_venv_auto = "create|source"
+
 [tools]
 worktrunk = { version = "latest", workflow = "release.yaml" }
 "npm:oxfmt" = "latest"
+"github:1jehuang/jcode" = "latest"
+"aqua:nextest-rs/nextest/cargo-nextest" = "latest"
+pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
+"github:longbridge/nsh" = "nightly"
+"cargo:cargo-sort" = "latest"
+hk = "latest"
+node = "24"
+bun = "latest"
+betterleaks = "latest"
+pkl = "latest"
+fnox = "latest"
+taplo = "latest"
+shellcheck = "latest"
+cargo-binstall = "latest"
+rust = { version = "latest", profile = "default", components = "llvm-tools,rust-analyzer", targets = "aarch64-apple-darwin,wasm32-unknown-unknown" }
+"cargo:cargo-hakari" = "latest"
+uv = "latest"
+python = "3.14"
+watchexec = "latest"
+shfmt = "latest"
+zig = "latest"
+"cargo:docsrs-mcp" = "latest"
 
-[tasks.format]
-description = "Format TS/TSX/JSON with oxfmt"
-run = "oxfmt"
+[daemons.api]
+task = "dev:api"
+ready_cmd = 'curl --fail --silent "http://${PAIRIDAEZA_ADDR:-127.0.0.1:17800}/healthz"'
+watch = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "src/**/*.rs",
+  "backend/**/*.rs",
+  "backend/Cargo.toml",
+  "backend/fixtures/**",
+  "*.ts",
+  "*.tsx",
+  "pages/**",
+  "components/**",
+  "icons/**",
+  "fonts/**",
+  "theme.json",
+  "nsh.json",
+  ".mise/tasks/dev/api",
+  ".mise/tasks/build/**",
+  ".mise/tasks/dist/web",
+]
 
-[tasks."format:check"]
-description = "Check formatting with oxfmt"
-run = "oxfmt --check"
+[env]
+PAIRIDAEZA_ADDR = "127.0.0.1:17810"
+PAIRIDAEZA_API_URL = "http://127.0.0.1:17810"

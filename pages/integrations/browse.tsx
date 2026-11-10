@@ -41,15 +41,15 @@ export function resetBrowse() {
 }
 
 const categoryOf = (name: string | null) => (name === OTHER ? null : name);
-const categories = () => PLUGIN_CATEGORIES.filter((c) => plugins.some((p) => p.category === c));
-const pluginMatches = () => plugins.filter((p) => (!category() || p.category === categoryOf(category())) && matchesPlugin(p, query()));
+const categories = () => PLUGIN_CATEGORIES.filter((c) => plugins().some((p) => p.category === c));
+const pluginMatches = () => plugins().filter((p) => (!category() || p.category === categoryOf(category())) && matchesPlugin(p, query()));
 
 /** Without a query the featured apps lead, so the rest leaves them out. */
 const visibleApps = () => {
   const needle = query().trim().toLowerCase();
   return needle
-    ? apps.filter((a) => a.name.toLowerCase().includes(needle) || a.slug.toLowerCase().includes(needle) || a.id.includes(needle))
-    : apps.filter((a) => !featuredIds.includes(a.id));
+    ? apps().filter((a) => a.name.toLowerCase().includes(needle) || a.slug.toLowerCase().includes(needle) || a.id.includes(needle))
+    : apps().filter((a) => !featuredIds.includes(a.id));
 };
 const strongMatches = () => (searching() ? visibleApps().filter((a) => matchesWordPrefixes(a.name, query())) : []);
 const weakMatches = () => (searching() ? visibleApps().filter((a) => !matchesWordPrefixes(a.name, query())) : visibleApps());
@@ -158,9 +158,9 @@ function PluginResults() {
 /** Recommended brands, then the categories that have plugins. */
 function PluginSections() {
   const sections = () => {
-    const rest = plugins.filter((p) => !p.category);
+    const rest = plugins().filter((p) => !p.category);
     return [
-      ...categories().map((name) => [name, categoryLabel(name), plugins.filter((p) => p.category === name)] as const),
+      ...categories().map((name) => [name, categoryLabel(name), plugins().filter((p) => p.category === name)] as const),
       ...(rest.length ? [[OTHER, "More", rest] as const] : []),
     ];
   };

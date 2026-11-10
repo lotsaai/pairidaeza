@@ -2,6 +2,7 @@ import { signal, Text, View } from "nsh";
 import { AlertDialog, Button, Input } from "nsh/base";
 import { SelectField, SettingsGroup, SettingsRow } from "../../components/settings";
 import { AppMenu, Field, fieldClass, MenuRow, TextButton } from "../../components/ui";
+import { apiSignal } from "../../api";
 
 type Kind = "login" | "card" | "contact" | "api_key" | "variable";
 type LoginField = { id: number; label: string; value: string; hidden: boolean };
@@ -19,62 +20,13 @@ const defaults = (): LoginField[] => [
   { id: 1, label: "Username", value: "", hidden: false },
   { id: 2, label: "Password", value: "", hidden: true },
 ];
-const items = signal<Item[]>([
-  {
-    id: "1",
-    kind: "login",
-    title: "example.com",
-    fields: { Site: "https://www.example.com" },
-    login: [
-      { id: 1, label: "Username", value: "alex@example.com", hidden: false },
-      { id: 2, label: "Password", value: "example-password", hidden: true },
-    ],
-  },
-  {
-    id: "2",
-    kind: "card",
-    title: "Card •••• 4242",
-    fields: {
-      "Card number": "4242424242424242",
-      Expiry: "12/28",
-      "Security code": "123",
-      "Name on card": "Alex Morgan",
-      "Billing address": "3",
-    },
-    login: [],
-  },
-  {
-    id: "3",
-    kind: "contact",
-    title: "Home",
-    fields: {
-      "Full name": "Alex Morgan",
-      Address: "123 Main Street",
-      City: "New York",
-      "State or region": "NY",
-      "ZIP or postal code": "10001",
-      Country: "United States",
-      Email: "alex@example.com",
-    },
-    login: [],
-  },
-  {
-    id: "4",
-    kind: "api_key",
-    title: "api.example.com",
-    fields: { Site: "https://api.example.com", Type: "bearer", Value: "example-api-key" },
-    login: [],
-  },
-  { id: "5", kind: "variable", title: "DEPLOY_TOKEN", fields: { "Variable name": "DEPLOY_TOKEN", Value: "example-token" }, login: [] },
-]);
+const items = apiSignal<Item[]>("vault", "items", []);
 const query = signal("");
 const filter = signal("all");
 const opened = signal<string | null>(null);
 const draft = signal<Draft | null>(null);
 const revealed = signal(false);
 let hideTimer: number | undefined;
-let nextId = 6;
-let nextFieldId = 3;
 
 const current = () => items().find((item) => item.id === opened());
 const shown = () =>
@@ -103,7 +55,7 @@ function toggleReveal() {
 function start(kind: Kind, item?: Item) {
   hide();
   draft.set({
-    id: item?.id ?? String(nextId++),
+    id: item?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     kind,
     title: item?.title ?? "",
     fields: { Type: "bearer", ...item?.fields },
@@ -245,7 +197,14 @@ function Editor() {
             label="Add field"
             variant="ghost"
             onPress={() =>
-              draft.update((d) => (d ? { ...d, login: [...d.login, { id: nextFieldId++, label: "", value: "", hidden: true }] } : d))
+              draft.update((d) =>
+                d
+                  ? {
+                      ...d,
+                      login: [...d.login, { id: Math.max(0, ...d.login.map((field) => field.id)) + 1, label: "", value: "", hidden: true }],
+                    }
+                  : d,
+              )
             }
           />
         </If>

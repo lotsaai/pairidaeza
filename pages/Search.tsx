@@ -34,7 +34,7 @@ export function SearchPalette() {
       onOpenChange={({ open }) => searchOpen.set(open)}
       animation="fade"
       backdropClass="bg-overlay"
-      class="mt-24 w-full max-w-xl self-center overflow-hidden rounded-(--radius) border border-border bg-popover shadow-lg"
+      class="mt-24 w-full max-w-xl self-center overflow-hidden rounded-(--radius) border border-border bg-popover shadow-lg shadow-shadow-color"
     >
       <Command
         items={items()}
