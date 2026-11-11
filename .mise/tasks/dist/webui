@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Bundle the release browser server with its web assets"
+#MISE depends=["build:release", "dist:web"]
+#MISE sources=["target/release/webui", "target/dist/web/pairidaeza/**", ".mise/tasks/dist/webui"]
+#MISE outputs=["target/dist/webui/webui", "target/dist/webui/public/index.html"]
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+set -euo pipefail
+
+rm -rf target/dist/webui
+mkdir -p target/dist/webui/public
+cp target/release/webui target/dist/webui/webui
+cp -R target/dist/web/pairidaeza/. target/dist/webui/public/

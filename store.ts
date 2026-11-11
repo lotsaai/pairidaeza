@@ -1,6 +1,7 @@
-// Workspace state is hydrated from the mock API before screens mount.
+// Workspace state is hydrated from the API before screens mount.
 import { batch, setColorScheme, signal } from "nsh";
-import { apiSignal, sessionUser, signInSession, signOutSession } from "./api";
+import { apiError, apiSignal, saving } from "./api";
+import { sessionUser, signOutSession } from "./auth";
 
 export type ComputerMode = "team" | "private" | "off";
 
@@ -284,7 +285,10 @@ export const allRuns = () => runs();
 /** A chat's newest run, or undefined (tracked where read). */
 export const latestRun = (chatId: string) => runs().find((r) => r.chatId === chatId);
 
-export const currentAccount = () => account();
+export const currentAccount = () => {
+  const user = sessionUser();
+  return { name: user?.name ?? "", email: user?.email ?? "" };
+};
 export const currentAppearance = () => appearance();
 export const currentDefaultModel = () => defaultModel();
 
@@ -295,10 +299,6 @@ export function setAppearance(value: Appearance) {
 
 export function setDefaultModel(value: string) {
   defaultModel.set(value);
-}
-
-export function renameAccount(name: string) {
-  account.update((a) => ({ ...a, name }));
 }
 
 function patchChat(id: string, patch: Partial<Chat>) {
@@ -377,7 +377,7 @@ export function createSpace(name: string): string {
   batch(() => {
     spaces.update((all) => [
       ...all,
-      { id, name: name.trim(), isDefault: false, members: [{ id: sessionUser()?.id ?? "", ...account(), role: "owner" }], openInvites: 0 },
+      { id, name: name.trim(), isDefault: false, members: [{ id: sessionUser()!.id, ...currentAccount(), role: "owner" }], openInvites: 0 },
     ]);
     currentSpace.set(id);
   });
@@ -524,10 +524,11 @@ export const docsUrl = "https://pairidaeza.example/docs";
 
 export const isSignedIn = signedIn;
 export const signOut = () => {
-  void signOutSession();
-};
-export const signIn = () => {
-  void signInSession();
+  if (saving()) {
+    apiError.set("Changes are still waiting to be saved. Retry saving before signing out.");
+    return;
+  }
+  void signOutSession().catch((error) => apiError.set(String(error)));
 };
 
 export function renameSection(id: string, name: string) {

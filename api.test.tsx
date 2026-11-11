@@ -1,15 +1,27 @@
 import { expect, open, test } from "nsh/test";
 
+test("bootstrap reaches the configured route from the app origin", async () => {
+  const user = { id: "u1", name: "Alex Rivera", email: "alex@example.com", emailVerified: true };
+  const app = await open("./api-test-app.tsx", {
+    storage: { "pairidaeza.tokens": JSON.stringify({ accessToken: "test", refreshToken: null, expiresAt: null }) },
+    network: {
+      "GET */api/data/bootstrap": { body: { user, documents: { test: { revision: 0, state: { value: "initial" } } } } },
+    },
+  });
+  await app.waitFor("initial");
+  expect(app.requests().map(({ method, url }) => `${method} ${new URL(url).pathname}`)).toEqual(["GET /api/data/bootstrap"]);
+});
+
 test("failed save retains later edits and retry persists the latest value", async () => {
   let revision = 0;
   let value = "initial";
   let writes = 0;
-  const user = { id: "u1", name: "Alex Rivera", email: "alex@example.com" };
+  const user = { id: "u1", name: "Alex Rivera", email: "alex@example.com", emailVerified: true };
   const app = await open("./api-test-app.tsx", {
+    storage: { "pairidaeza.tokens": JSON.stringify({ accessToken: "test", refreshToken: null, expiresAt: null }) },
     network: {
-      "POST */api/mock/session": { body: { user, token: "test" } },
-      "GET */api/mock/bootstrap": () => ({ body: { user, documents: { test: { revision, state: { value } } } } }),
-      "PATCH */api/mock/state/test": (request) => {
+      "GET */api/data/bootstrap": () => ({ body: { user, documents: { test: { revision, state: { value } } } } }),
+      "PATCH */api/data/documents/test": (request) => {
         writes++;
         if (writes === 1) return { status: 500, delay: 100, body: {} };
         const body = JSON.parse(request.body ?? "{}");

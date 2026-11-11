@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Generate code for SQL in pairidaezad"
+#MISE sources=["crates/pairidaezad/postgres/queries/**/*.sql", "crates/pairidaezad/postgres/migrations/**", "sqlc.json"]
+#MISE outputs=["crates/pairidaezad/src/axumext/pgdb/**/*.rs"]
+
+set -euo pipefail
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir"
+
+sqlc generate

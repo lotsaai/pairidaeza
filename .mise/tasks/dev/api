@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-#MISE description="Run the development API, serving the packaged web UI"
-#MISE depends=["build:debug", "dist:web"]
+#MISE description="Run the development API"
+#MISE depends=["build:debug"]
 
 proj_dir=$(git rev-parse --show-toplevel)
 cd "$proj_dir" || exit 1
 
 set -euo pipefail
 
-export PAIRIDAEZA_MOCK_AUTH=true
-export PAIRIDAEZA_WEB_DIST="${PAIRIDAEZA_WEB_DIST:-target/dist/web/pairidaezo}"
-exec target/debug/pairidaeza-backend "$@"
+exec target/debug/pairidaezad "$@"

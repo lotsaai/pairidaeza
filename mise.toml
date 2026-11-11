@@ -14,8 +14,9 @@ worktrunk = { version = "latest", workflow = "release.yaml" }
 "npm:oxfmt" = "latest"
 "github:1jehuang/jcode" = "latest"
 "aqua:nextest-rs/nextest/cargo-nextest" = "latest"
+chromedriver = "157"
 pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
-"github:longbridge/nsh" = "nightly"
+"github:longbridge/nsh" = { version = "latest", minimum_release_age = "5m" }
 "cargo:cargo-sort" = "latest"
 hk = "latest"
 node = "24"
@@ -26,7 +27,7 @@ fnox = "latest"
 taplo = "latest"
 shellcheck = "latest"
 cargo-binstall = "latest"
-rust = { version = "latest", profile = "default", components = "llvm-tools,rust-analyzer", targets = "aarch64-apple-darwin,wasm32-unknown-unknown" }
+rust = { version = "latest", profile = "default", components = "llvm-tools,rust-analyzer", targets = "aarch64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android,wasm32-unknown-unknown" }
 "cargo:cargo-hakari" = "latest"
 uv = "latest"
 python = "3.14"
@@ -34,17 +35,34 @@ watchexec = "latest"
 shfmt = "latest"
 zig = "latest"
 "cargo:docsrs-mcp" = "latest"
+"go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
+"cargo:sqlx-cli" = "latest"
+
+[secrets.fnox]
 
 [daemons.api]
 task = "dev:api"
-ready_cmd = 'curl --fail --silent "http://${PAIRIDAEZA_ADDR:-127.0.0.1:17800}/healthz"'
+ready_cmd = 'curl --fail --silent "http://${PAIRIDAEZA_ADDR:-127.0.0.1:17810}/healthz"'
 watch = [
   "Cargo.toml",
   "Cargo.lock",
-  "src/**/*.rs",
-  "backend/**/*.rs",
-  "backend/Cargo.toml",
-  "backend/fixtures/**",
+  "crates/pairidaezad/**",
+  "crates/protocol/**",
+  "crates/telemetry/**",
+  ".mise/tasks/dev/api",
+  ".mise/tasks/build/**",
+]
+
+[daemons.webui]
+task = "dev:webui"
+depends = ["api"]
+ready_cmd = 'curl --fail --silent "http://${PAIRIDAEZA_WEB_ADDR:-127.0.0.1:17811}/healthz"'
+watch = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "crates/webui/**",
+  "crates/telemetry/**",
+  "crates/app/**",
   "*.ts",
   "*.tsx",
   "pages/**",
@@ -53,11 +71,27 @@ watch = [
   "fonts/**",
   "theme.json",
   "nsh.json",
-  ".mise/tasks/dev/api",
+  ".mise/tasks/dev/webui",
   ".mise/tasks/build/**",
   ".mise/tasks/dist/web",
 ]
 
+[daemons.webdriver]
+task = "dev:webdriver"
+ready_cmd = 'curl --fail --silent http://127.0.0.1:17812/status'
+
+
 [env]
 PAIRIDAEZA_ADDR = "127.0.0.1:17810"
 PAIRIDAEZA_API_URL = "http://127.0.0.1:17810"
+PAIRIDAEZA_WEB_ADDR = "127.0.0.1:17811"
+PAIRIDAEZA_WEB_URL = "http://127.0.0.1:17811"
+PAIRIDAEZA_WEB_ORIGIN = "http://127.0.0.1:17811"
+PAIRIDAEZA_DATABASE_URL = "postgres://postgres@localhost:5432/pairidaeza_dev"
+PAIRIDAEZA_AUTH__ISSUER = "https://auth.lotsa.ai"
+PAIRIDAEZA_AUTH__CLIENT_ID = "399106586653524654"
+PAIRIDAEZA_AUTH__NATIVE_CLIENT_ID = "399234353625923915"
+PAIRIDAEZA_AUTH__PROJECT_ID = "399106433292993198"
+PAIRIDAEZA_AUTH__REDIRECT_URI = "http://127.0.0.1:17811/auth/zitadel/callback"
+OTEL_EXPORTER_OTLP_ENDPOINT = "http://127.0.0.1:4318"
+OTEL_EXPORTER_OTLP_PROTOCOL = "http/protobuf"

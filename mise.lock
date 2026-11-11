@@ -59,14 +59,28 @@ version = "0.1.0"
 backend = "cargo:docsrs-mcp"
 specifiers = ["latest"]
 
+[[tools."cargo:sqlx-cli"]]
+version = "0.9.0"
+backend = "cargo:sqlx-cli"
+specifiers = ["latest"]
+
+[[tools.chromedriver]]
+version = "157.0.8103.50"
+backend = "vfox:jdx/vfox-chromedriver"
+specifiers = ["157"]
+
+[tools.chromedriver."platforms.macos-arm64"]
+checksum = "sha256:a248565ad9769b52fd55e04c6e82eb157ca414c2d6eae3238135ef2228024845"
+url = "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.50/mac-arm64/chromedriver-mac-arm64.zip"
+
 [[tools.fnox]]
-version = "1.47.0"
+version = "1.48.0"
 backend = "packslip:github.com/jdx/fnox"
 specifiers = ["latest"]
 
 [tools.fnox."platforms.macos-arm64"]
-checksum = "sha256:e1afc59116fe9bfee645f3e0d0353b0f7ff68ce4a76bc6c516da7aedd9a47179"
-url = "https://github.com/jdx/fnox/releases/download/v1.47.0/fnox-aarch64-apple-darwin.tar.gz"
+checksum = "sha256:1b81153805a485072ecbeb14b2b2aaa24a9bfeb467002a7d725cbfc01cbb1811"
+url = "https://github.com/jdx/fnox/releases/download/v1.48.0/fnox-aarch64-apple-darwin.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/fnox/.github/workflows/release.yml"
 repository_ids = { repository = "1078762196" }
 
@@ -82,24 +96,28 @@ url = "https://github.com/1jehuang/jcode/releases/download/v0.99.1/jcode-macos-a
 url_api = "https://api.github.com/repos/1jehuang/jcode/releases/assets/666173515"
 
 [[tools."github:longbridge/nsh"]]
-version = "nightly"
+version = "0.5.0"
 backend = "github:longbridge/nsh"
-specifiers = ["nightly"]
+specifiers = ["latest"]
 
 [tools."github:longbridge/nsh"."platforms.macos-arm64"]
-checksum = "sha256:b8a8c2f8cebfa9412717b4e7c4478c9a5be8b098e85c7f5f8dfe2f8f6b43b84a"
-checksum_source = "mise-versions"
-url = "https://github.com/longbridge/nsh/releases/download/nightly/nsh-macos-arm64.tar.gz"
-url_api = "https://api.github.com/repos/longbridge/nsh/releases/assets/730419932"
+checksum = "sha256:e6722427b391b00cf7ec13137db9366e78d1e7a045f2933cf00b340365309d9d"
+url = "https://github.com/longbridge/nsh/releases/download/v0.5.0/nsh-macos-arm64.tar.gz"
+url_api = "https://api.github.com/repos/longbridge/nsh/releases/assets/735365672"
+
+[[tools."go:github.com/sqlc-dev/sqlc/cmd/sqlc"]]
+version = "1.31.1"
+backend = "go:github.com/sqlc-dev/sqlc/cmd/sqlc"
+specifiers = ["latest"]
 
 [[tools.hk]]
-version = "2.11.1"
+version = "2.12.0"
 backend = "packslip:github.com/jdx/hk"
 specifiers = ["latest"]
 
 [tools.hk."platforms.macos-arm64"]
-checksum = "sha256:95f89e6eef60e0c690b0d439b30e3b8558f47235a1a45cbff7b5351d294e4322"
-url = "https://github.com/jdx/hk/releases/download/v2.11.1/hk-aarch64-apple-darwin.tar.gz"
+checksum = "sha256:269c17d47e884c19adb77144d5957e854fc5fc6a1a6f9c1a0a5b19431e2fabb8"
+url = "https://github.com/jdx/hk/releases/download/v2.12.0/hk-aarch64-apple-darwin.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/hk/.github/workflows/release.yml"
 repository_ids = { repository = "922514152" }
 
@@ -113,18 +131,18 @@ checksum = "sha256:aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df3
 url = "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz"
 
 [[tools."npm:oxfmt"]]
-version = "0.77.0"
+version = "0.78.0"
 backend = "npm:oxfmt"
 specifiers = ["latest"]
 
 [[tools.pitchfork]]
-version = "2.33.0"
+version = "2.34.0"
 backend = "packslip:github.com/jdx/pitchfork"
 specifiers = ["latest"]
 
 [tools.pitchfork."platforms.macos-arm64"]
-checksum = "sha256:eeb71381cf6e2b87575cc3bc06a98a2f1c5ab741acd1e5522cde7ad3727f9d32"
-url = "https://github.com/jdx/pitchfork/releases/download/v2.33.0/pitchfork-aarch64-apple-darwin.tar.gz"
+checksum = "sha256:27dad04ac4cf54cd3315ca6ac1948fb811a8c02a1a83ba5213a137618b535a0a"
+url = "https://github.com/jdx/pitchfork/releases/download/v2.34.0/pitchfork-aarch64-apple-darwin.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/pitchfork/.github/workflows/release.yml"
 repository_ids = { repository = "899500793" }
 
@@ -157,7 +175,7 @@ specifiers = ["latest"]
 [tools.rust.options]
 components = "llvm-tools,rust-analyzer"
 profile = "default"
-targets = "aarch64-apple-darwin,wasm32-unknown-unknown"
+targets = "aarch64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,wasm32-unknown-unknown,x86_64-linux-android"
 
 [[tools.shellcheck]]
 version = "0.11.0"

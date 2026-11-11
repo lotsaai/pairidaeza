@@ -1,9 +1,10 @@
 {
-  "name": "pairidaezo",
-  "id": "ai.lotsa.pairidaezo",
+  "name": "pairidaeza",
+  "id": "ai.lotsa.pairidaeza",
+  "schemes": ["ai.lotsa.pairidaeza"],
   "version": "1.0.0",
   "build": 1,
-  "rust": ".",
+  "rust": "crates/app",
   "theme": "theme.json",
   "tailwind": {
     "spacing": 4,
@@ -21,8 +22,8 @@
     }
   },
   "capabilities": {
-    "network": { "hosts": ["127.0.0.1", "localhost"] },
-    "process": { "env": ["PAIRIDAEZA_API_URL"] },
+    "network": { "hosts": ["127.0.0.1", "localhost", "auth.lotsa.ai"] },
+    "process": { "env": ["PAIRIDAEZA_API_URL", "PAIRIDAEZA_WEB_URL"] },
     "clipboard": true,
     "picker": true,
     "statusBar": true,

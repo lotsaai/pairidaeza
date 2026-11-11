@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+#MISE description="Run native sign-in initiation on the desktop real host"
+#MISE depends=["build:debug"]
+
+set -euo pipefail
+case "$(uname -s)" in
+Darwin) target=macos ;;
+Linux) target=linux ;;
+MINGW* | MSYS* | CYGWIN*) target=windows ;;
+*)
+	echo "Unsupported desktop platform: $(uname -s)" >&2
+	exit 1
+	;;
+esac
+
+nsh test auth.integration.test.tsx "$@" --target "$target"

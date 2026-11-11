@@ -1,0 +1,38 @@
+[package]
+name = "pairidaezad"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license = "UNLICENSED"
+
+[dependencies]
+axum.workspace = true
+axum-extra.workspace = true
+confique.workspace = true
+dashmap.workspace = true
+dirs.workspace = true
+eyre.workspace = true
+jiff.workspace = true
+jsonwebtoken.workspace = true
+openidconnect.workspace = true
+protocol.workspace = true
+reqwest.workspace = true
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+telemetry = { path = "../telemetry" }
+thiserror.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+tower.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+sqlx.workspace = true
+test-context.workspace = true
+
+[lints]
+workspace = true

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-#MISE description="Open the Pairidaeza web app served by the API"
-#MISE daemons=["api"]
+#MISE description="Open the Pairidaeza browser application"
+#MISE daemons=["webui"]
 
 proj_dir=$(git rev-parse --show-toplevel)
 cd "$proj_dir" || exit 1
 
 set -euo pipefail
 
-url=${PAIRIDAEZA_API_URL:-http://127.0.0.1:17810}
+url=${PAIRIDAEZA_WEB_URL:-http://127.0.0.1:17811}
 case "$(uname -s)" in
 Darwin) exec open "$@" "$url" ;;
 Linux) exec xdg-open "$url" "$@" ;;

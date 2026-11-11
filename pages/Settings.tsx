@@ -14,11 +14,9 @@ import {
   currentAppearance,
   currentPreferences,
   deleteOrganization,
-  renameAccount,
   renameOrganization,
   setAppearance,
   setPreference,
-  signOut,
 } from "../store";
 import { ApprovalsSettings } from "./settings/Approvals";
 import { ComputerSettings } from "./settings/Computer";
@@ -92,87 +90,10 @@ const timezones = ["America/Los_Angeles", "America/New_York", "Europe/London", "
 );
 
 function Account() {
-  const draft = signal<string | null>(null);
-  const save = () => {
-    const name = draft()?.trim();
-    if (name) renameAccount(name);
-    draft.set(null);
-  };
   return (
     <SettingsGroup title="Account">
-      <If
-        when={draft() !== null}
-        else={
-          <SettingsRow
-            first
-            label={currentAccount().name}
-            detail={currentAccount().email}
-            control={<TextButton label="Edit" variant="ghost" onPress={() => draft.set(currentAccount().name)} />}
-          />
-        }
-      >
-        <View class="gap-3 p-4">
-          <Text class="text-sm font-medium text-foreground">Name</Text>
-          <Input value={draft() ?? ""} onChange={({ value }) => draft.set(value)} onSubmit={save} maxLength={80} class={fieldClass} />
-          <View class="flex-row gap-2">
-            <TextButton label="Save" variant="primary" onPress={save} />
-            <TextButton label="Cancel" variant="ghost" onPress={() => draft.set(null)} />
-          </View>
-        </View>
-      </If>
+      <SettingsRow first label={currentAccount().name} detail={currentAccount().email} />
     </SettingsGroup>
-  );
-}
-
-function Password() {
-  const editing = signal(false);
-  const next = signal("");
-  const again = signal("");
-  const note = signal<string | null>(null);
-  const save = () => {
-    if (next().length < 8) return note.set("Use at least 8 characters");
-    if (next() !== again()) return note.set("Passwords do not match");
-    editing.set(false);
-    next.set("");
-    again.set("");
-    note.set("Password updated");
-  };
-  return (
-    <SettingsRow
-      first
-      label="Password"
-      detail={editing() ? undefined : (note() ?? undefined)}
-      control={
-        editing() ? undefined : <TextButton label="Change password" variant="ghost" onPress={() => (note.set(null), editing.set(true))} />
-      }
-    >
-      <If when={editing()}>
-        <View class="gap-3">
-          <Input
-            value={next()}
-            onChange={({ value }) => next.set(value)}
-            masked
-            autoComplete="new-password"
-            placeholder="New password"
-            class={fieldClass}
-          />
-          <Input
-            value={again()}
-            onChange={({ value }) => again.set(value)}
-            onSubmit={save}
-            masked
-            autoComplete="new-password"
-            placeholder="Confirm password"
-            class={fieldClass}
-          />
-          <If when={note()}>{(n) => <Text class="text-sm text-destructive">{n()}</Text>}</If>
-          <View class="flex-row gap-2">
-            <TextButton label="Save" variant="primary" onPress={save} />
-            <TextButton label="Cancel" variant="ghost" onPress={() => (note.set(null), editing.set(false))} />
-          </View>
-        </View>
-      </If>
-    </SettingsRow>
   );
 }
 
@@ -248,9 +169,6 @@ function General() {
           onChange={(on) => setPreference("letBotsUseComputer", on)}
         />
       </SettingsGroup>
-      <SettingsGroup title="Security">
-        <Password />
-      </SettingsGroup>
       <SettingsGroup title="Data">
         <SettingsRow
           first
@@ -265,21 +183,6 @@ function General() {
         <SettingsRow
           label="Agent from another app"
           control={<TextButton label="Import an agent" variant="ghost" onPress={() => needsServer("Import an agent")} />}
-        />
-        <SettingsRow
-          label="Delete account"
-          control={
-            <Button
-              accessibilityLabel="Delete account"
-              onPress={async () =>
-                (await confirm("Delete your account?", "Your bots, chats and data are deleted. This cannot be undone.", "Delete")) &&
-                signOut()
-              }
-              class="min-h-8 items-center justify-center rounded-full px-4 py-1.5 hover:bg-accent active:bg-accent"
-            >
-              <Text class="text-sm font-medium text-destructive">Delete</Text>
-            </Button>
-          }
         />
       </SettingsGroup>
     </>
@@ -375,10 +278,13 @@ function Wide() {
   const section = () => sectionOf(shown());
   return (
     <View class="flex-1 flex-row">
-      <View class="w-60 gap-1 border-e border-sidebar-border bg-sidebar px-3 pt-12 pb-4" role="navigation" accessibilityLabel="Settings">
-        <Text role="header" class="px-2.5 pb-3 text-lg font-semibold text-sidebar-foreground">
-          Settings
-        </Text>
+      <View class="w-60 gap-1 border-e border-sidebar-border bg-sidebar px-3 pt-4 pb-4" role="navigation" accessibilityLabel="Settings">
+        <View class="flex-row items-center gap-2 pb-3">
+          <IconButton icon="chevron-left" label="Back to workspace" onPress={close} />
+          <Text role="header" class="text-lg font-semibold text-sidebar-foreground">
+            Settings
+          </Text>
+        </View>
         <Each of={sections} key={(s) => s.id}>
           {(s) => (
             <Button
@@ -396,7 +302,7 @@ function Wide() {
         </Each>
       </View>
       <View class="min-w-0 flex-1">
-        <View class="flex-row items-start gap-4 border-b border-border px-8 pt-12 pb-5">
+        <View class="flex-row items-start gap-4 border-b border-border px-8 pt-4 pb-5">
           <View class="min-w-0 flex-1 gap-1">
             <Text role="header" class="text-xl font-medium text-foreground">
               {section().label}
@@ -422,7 +328,7 @@ function Header(props: { title: string }) {
   return (
     <View class="h-14 flex-row items-center gap-2 border-b border-border px-3">
       <View class="w-9">
-        <If when={settingsNav.routes().length > 1}>
+        <If when={settingsNav.routes().length > 1} else={<IconButton icon="chevron-left" label="Back to workspace" onPress={close} />}>
           <IconButton icon="chevron-left" label="Back" onPress={() => settingsNav.pop()} />
         </If>
       </View>

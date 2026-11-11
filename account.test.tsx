@@ -9,12 +9,15 @@ test("a skill is edited, saved and deleted in two steps", async () => {
   await app.press("text:Skills");
   await app.waitFor("Your skills");
   await app.press("text:changelog");
+  await app.waitFor("label:SKILL.md");
   await app.type("label:SKILL.md", "\nExtra line.");
   await app.press("text:Save");
   await app.waitFor("Your skills");
   await app.press("text:changelog");
+  await app.waitFor("label:SKILL.md");
   expect(app.value("label:SKILL.md")).toContain("Extra line.");
   await app.press("text:Delete");
+  await app.waitFor("text:Confirm delete");
   await app.press("text:Confirm delete");
   await app.waitFor("Your skills");
   expect(app.texts()).not.toContain("changelog");
@@ -25,7 +28,10 @@ test("a plugin skill is read-only and only closes", async () => {
   const app = await open("./App.tsx", wideWindow);
   await app.press("role:button[Account]");
   await app.press("text:Skills");
+  await app.waitFor("Your skills");
   await app.press("text:receipts");
+  await app.waitFor("label:SKILL.md");
+  await app.waitFor("text:Close");
   expect(app.shows("text:Save")).toBe(false);
   expect(app.shows("text:Delete")).toBe(false);
   await app.press("text:Close");
@@ -62,21 +68,4 @@ test("invite friends copies the link", async () => {
   expect(app.value("label:Invite link")).toBe("https://pairidaeza.example/sign-up?ref=ALEX42");
   await app.press("text:Copy link");
   await app.waitFor("Copied");
-});
-
-test("get the mobile app offers both stores", async () => {
-  const app = await open("./App.tsx", wideWindow);
-  await app.press("role:button[Account]");
-  await app.press("text:Get the mobile app");
-  await app.press("text:App Store");
-  expect(app.openedUrls()).toEqual(["https://apps.apple.com/app/pairidaeza/id0000000000"]);
-});
-
-test("log out shows the sign-in page, and signing in returns", async () => {
-  const app = await open("./App.tsx", wideWindow);
-  await app.press("role:button[Account]");
-  await app.press("text:Log out");
-  await app.waitFor("Sign in to Pairidaeza");
-  await app.press("role:button[Sign in]");
-  await app.waitFor("role:button[Account]");
 });

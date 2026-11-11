@@ -1,0 +1,30 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+http.workspace = true
+openidconnect.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+url.workspace = true
+
+[dependencies]
+nsh-base.workspace = true
+nsh-core.workspace = true
+nsh-platform-linux.workspace = true
+nsh-platform-macos.workspace = true
+nsh-platform-windows.workspace = true
+
+[dev-dependencies]
+fantoccini = { version = "0.22.1", default-features = false, features = ["rustls-tls"] }
+nsh-engine.workspace = true
+nsh-testing.workspace = true
+rustls.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true

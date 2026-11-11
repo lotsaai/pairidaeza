@@ -2,9 +2,10 @@
 import "./fonts/IBMPlexSans[wdth,wght].ttf";
 import "./fonts/IBMPlexSerif-Regular.ttf";
 import "./fonts/IBMPlexMono-Regular.ttf";
-import { mount, Text, View } from "nsh";
+import { mount, Text, UrlScheme, View } from "nsh";
 import { NavPage, NavStack } from "nsh/base";
-import { apiError, bootState, loadApi, retrySaving, sessionUser } from "./api";
+import { apiError, bootState, loadApi, retrySaving } from "./api";
+import { finishSignIn, sessionUser } from "./auth";
 import { TextButton } from "./components/ui";
 import { mainView, nav, selectedChatId, sidebarShownWidth, wide } from "./nav";
 import { SidebarResizeHandle } from "./pages/sidebar/resize";
@@ -121,6 +122,9 @@ function Shell() {
 }
 
 function App() {
+  UrlScheme.on("open", ({ url }) => {
+    void finishSignIn(url, loadApi);
+  });
   void loadApi();
   return (
     <View class="flex-1 bg-background">

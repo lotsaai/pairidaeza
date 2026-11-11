@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+#MISE description="Package the Pairidaeza desktop app for this host"
+#MISE sources=["Cargo.toml", "Cargo.lock", "crates/*/Cargo.toml", "crates/*/**/*.rs", "crates/pairidaezad/fixtures/**", "crates/app/**", "*.ts", "*.tsx", "pages/**", "components/**", "icons/**", "fonts/**", "nsh.json", "theme.json", "tsconfig.json", "mise.toml", "mise.lock", ".mise/tasks/dist/desktop"]
+#MISE outputs=["target/dist/desktop/.packaged", "target/dist/desktop/{{ os(macos='pairidaeza.app/Contents/MacOS/pairidaeza', linux='pairidaeza/pairidaeza', windows='pairidaeza/pairidaeza.exe') }}"]
+
+set -euo pipefail
+
+proj_dir=$(git rev-parse --show-toplevel)
+cd "$proj_dir" || exit 1
+
+case "$(uname -s)" in
+Darwin) target=macos ;;
+Linux) target=linux ;;
+MINGW* | MSYS* | CYGWIN*) target=windows ;;
+*)
+	echo "Unsupported desktop platform: $(uname -s)" >&2
+	exit 1
+	;;
+esac
+
+rm -f target/dist/desktop/.packaged
+nsh package . --target "$target" --out target/dist/desktop
+touch target/dist/desktop/.packaged

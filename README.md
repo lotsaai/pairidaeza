@@ -1,119 +1,196 @@
 # Pairidaeza
 
-The NSH UI is mixed Rust/TSX: `App.tsx` composes the UI and `src/lib.rs`
-exports native Rust components, modules, and classes. The root Cargo package
-shares a workspace with the Rust backend in `backend/`.
+The NSH UI combines TSX with Rust bindings. The Rust workspace separates
+the application, browser server (`webui`), API (`pairidaezad`), shared
+contracts (`protocol`), and observability (`telemetry`).
 
 ```sh
 mise run build              # default debug build
-mise run dev:desktop        # hot-reloading desktop UI; starts the API automatically
+mise run dev:desktop        # run the packaged desktop app in the foreground
 mise run test               # Rust and NSH tests, using the same managed API
 mise run check              # hk checks, including rustfmt, clippy and nsh check
 mise run format             # hk fixes, including rustfmt and TS/TSX/JSON formatting
 ```
 
 Development targets are `dev:desktop`, `dev:ios`, `dev:android` and `dev:web`.
-They all start or reuse the same managed `api` daemon.
-Desktop and mobile use `nsh dev`. Android requires `adb` on PATH and a
+Native clients start or reuse the managed `api` daemon on port 17810.
+Mobile uses `nsh dev`. Android requires `adb` on PATH and a
 connected device; it forwards the app's loopback port 17810 to the API port.
-`dev:web` opens the packaged UI at the API origin; it does not start another web server.
+`dev:web` starts the managed `webui` daemon and opens port 17811.
+The `webui` daemon depends on `api`, so each service runs once.
+
+`dev:desktop` packages the app when its sources change and runs it in the
+foreground. To rerun it after source changes, use `mise watch dev:desktop`.
+Restarting discards in-memory state, including any authentication transaction
+in progress. Finish authentication before changing watched files.
+
+Settings uses a compact header with a left-side back chevron beside its title.
+The chevron returns to the workspace; the right-side close button remains.
+
+On macOS, the task registers the packaged app with Launch Services before
+starting it. The Linux and Windows release runners register the callback scheme
+for the current user at startup. Linux requires `xdg-mime` on PATH. Close other
+Pairidaeza instances before signing in so the callback reaches the instance
+that started the authentication transaction.
+
 
 NSH-generated files stay in `.nsh/`. Cargo build output stays in `target/`.
 
-Tasks are file-based under `.mise/tasks/`, following Alvin's hierarchy.
-`build/_default` depends on `build:debug`; `build:release` builds release binaries.
-The daemon runs `dev:api`, which depends on `build:debug` and `dist:web`,
-then executes `target/debug/pairidaeza-backend`. `dist:web` packages the NSH
-web UI into `target/dist/web/pairidaezo`, served by that same API process.
-Client development tasks and `test:ui` start or reuse the daemon automatically.
-`test/_default` runs the full suite through `test:rust` and `test:ui`.
-`verify` depends on `check` and `test`. No separate test server runs.
-Use `mise daemons logs api` and `mise daemons stop api` to manage the local API.
+## Application SQL
 
-## Backend
+Application SQL stays in `crates/pairidaezad/postgres/queries/`, with SQLx
+migrations in `postgres/migrations/`. Generate typed queries separately from builds:
 
-`mise run dev:desktop` starts the loopback-only HTTP and JSON-RPC WebSocket server automatically.
-`GET /healthz` returns `ok`. WebSocket clients connect at `/` and call
-`run.start` with `{"prompt":"..."}`, then `run.status` or `run.cancel` with
-`{"runId":"..."}`. Status includes the completed result. Runs and tools are
-isolated by authenticated issuer and subject and stored under
-`PAIRIDAEZA_DATA_DIR` (the platform data directory's `pairidaeza` directory by
-default). Browser sessions persist in a separate SQLite database there.
+```sh
+mise run generate:sql:pairidaezad
+mise run test:rust
+```
 
-Configure Zitadel with `PAIRIDAEZA_AUTH__ISSUER`,
-`PAIRIDAEZA_AUTH__CLIENT_ID`, `PAIRIDAEZA_AUTH__PROJECT_ID`,
-`PAIRIDAEZA_AUTH__REDIRECT_URI`, and a secret
-`PAIRIDAEZA_AUTH__SESSION_KEY`. The callback URL must end in
-`/auth/zitadel/callback`. The issuer and redirect must match the registered
-Zitadel application; use HTTPS at the public reverse proxy. Native clients use
-the `/auth/begin` and `/auth/finish` flow and send the returned token in an
-`Authorization: Bearer` header. Browser clients use `/auth/begin` and the
-same-origin session cookie. Without a session key, authentication is disabled
-for local development and the server logs a warning. The server refuses
-non-loopback binds even in this mode.
+The root `sqlc.json` uses `sqlc-gen-rust` with `deadpool-postgres`; generated
+queries use `tokio-postgres` through that pool. Regenerate after changing SQL.
+Do not edit generated query files. The plugin URL and checksum identify the
+current release artifact, not a policy to keep older dependencies.
 
-The jcode executable is supplied by mise. Configure jcode's model provider and
-credentials before starting runs. The server loads optional configuration from
-the platform config directory at `pairidaeza/backend.toml`, overridden by
-environment variables. Set `PAIRIDAEZA_ADDR` to change the loopback address and
-`PAIRIDAEZA_WEB_DIST` to serve a built web directory.
+Application database tests use the isolated PostgreSQL `test-context` pattern.
+The browser session store is a separate integration in `webui`; it does not
+use these generated queries or the application database test pattern.
 
-The daemon follows the sibling Heyday service's Axum, Zitadel, persistent
-session, and OpenTelemetry bootstrap pattern. The UI remains mock-data-only.
-`jcode-sdk` is pinned in Cargo; mise supplies the jcode process. Only
-`note_read` and `note_write` are exposed to the agent, scoped to its owner.
-Note mutations and tool-call results commit together, preventing duplicate
-application of the same call.
+## Run the services
 
-Run `mise run test:rust` for runtime, authentication, session persistence,
-and HTTP/WebSocket coverage. Lifecycle logs identify the run, entry point,
-outcome, and duration without recording prompts or note contents. Configure
-the standard `OTEL_*` environment variables for trace export.
+Tasks are file-based under `.mise/tasks/`.
+`build:debug` builds both executables with workspace-wide feature resolution.
+The `api` daemon runs `dev:api`, which depends only on `build:debug`.
+The `webui` daemon runs `dev:webui`, which owns `build:debug` and `dist:web`.
+Do not manually repeat those dependencies or start additional server instances.
 
-Interrupted runs are marked interrupted rather than automatically replayed.
-Turns have a ten-minute deadline and cancellation a ten-second deadline;
-deadline expiry records interruption, not successful cancellation.
-Live model execution requires a configured jcode provider. Browser sign-in
-requires a registered Zitadel application; neither credential is bundled.
+```sh
+mise daemons start webui
+mise daemons logs api webui
+mise run dev:web
+```
 
-## API-backed UI development
+Both services expose `/healthz`. `PAIRIDAEZA_ADDR` configures the API listener,
+and `PAIRIDAEZA_WEB_ADDR` configures the browser listener.
+`PAIRIDAEZA_WEB_DIST` selects the browser assets directory.
+The browser server reads `pairidaeza/webui.toml` in the user config directory;
+the API reads `pairidaeza/backend.toml`.
 
-Start any client development task, for example `mise run dev:desktop`.
-The UI loads fixtures from the backend and saves changes through the mock HTTP API.
-Zitadel is not used in this mode. Mock authentication must be explicitly
-enabled and cannot be combined with a Zitadel session key.
+## Package the browser server
 
-Mise sets the API and UI address to `http://127.0.0.1:17810`, avoiding Heyday's
-port. Native hosts also default to `http://127.0.0.1:17810`.
-Set `PAIRIDAEZA_API_URL` to use another loopback address. iOS passes this
-through `SIMCTL_CHILD_PAIRIDAEZA_API_URL`; Android forwards port 17810 to its
-configured API port with `adb reverse`.
-The packaged web UI uses its own origin; cross-origin browser access is not enabled.
+```sh
+mise run dist:webui
+```
 
-`mise run test` runs the complete Rust and NSH test suites.
-For a focused UI test, use `mise run test:ui -- api-ui.test.tsx`.
-Both start or reuse the managed API automatically; no manual server startup is needed.
+This task builds the host-native release executables and packages the NSH
+browser application through its existing task. The resulting
+`target/dist/webui/` contains `webui` and `public/`.
+Copy the whole directory to the deployment host and run `./webui` from that
+directory. Build for the deployment host's OS and architecture.
+The asset directory defaults to `public`; set `PAIRIDAEZA_WEB_DIST` to use another path.
+TLS termination and external deployment infrastructure are not configured here.
 
-UI journeys reset the development mock user's documents to fixtures.
-Run them only with disposable mock data; tests replace edits made in the UI.
+## Backend and API contracts
 
-The mise daemon watches backend sources, fixtures, UI sources, icons, theme
-and task inputs. A change restarts `dev:api`; its dependencies rebuild the
-changed Rust or web inputs before the API starts again.
-`dev:api` is the foreground process task used by the daemon, not a second server.
+`webui` serves the packaged browser application and owns browser OAuth/session
+configuration and the PostgreSQL `tower-sessions` integration. `pairidaezad`
+keeps JWT validation, API configuration, fixtures, and application SQL.
+Both server crates depend on `protocol` for shared API contracts.
+`telemetry` owns their shared observability setup.
 
-See [API-INVENTORY.md](API-INVENTORY.md) for the complete data inventory,
-endpoint contract and mock limitations. Use fake vault values only: mock
-storage is not encrypted credential storage. Bot replies and provider
-connections are still simulated; API hookup does not make them live.
+`webui` implements discovery, authorization-code login with PKCE and nonce
+verification, PostgreSQL-backed browser sessions, refresh, logout, and authenticated
+API forwarding. `pairidaezad` validates bearer JWTs against discovered JWKS,
+issuer and project audience, and loads the real profile from Zitadel UserInfo.
+Application documents remain mock fixtures, isolated by authenticated issuer
+and subject. Health checks remain public; `/openapi.json` describes the API.
+
+The browser client uses `PAIRIDAEZA_AUTH__CLIENT_ID` and its registered
+`PAIRIDAEZA_AUTH__REDIRECT_URI`. Native apps use the separate
+`PAIRIDAEZA_AUTH__NATIVE_CLIENT_ID`, compiled into the app by mise builds,
+and `ai.lotsa.pairidaeza:/auth` as their registered callback. Both registrations
+must issue JWT access tokens for the configured project audience.
+Set `PAIRIDAEZA_AUTH__ISSUER` to the provider issuer and
+`PAIRIDAEZA_AUTH__PROJECT_ID` to the access token's project audience.
+The API accepts RS256, RS384, and RS512 signatures with discovered JWKS keys.
+The configured provider's discovery document advertises RS256, RS384, and RS512
+for ID tokens; its current JWKS signing keys advertise RS256. Discovery does not
+specify access-token algorithms. Other signing families are not accepted.
+Issuer, audience, expiry, subject, and signature validation remain required.
+If the provider changes signing families, update the verification policy before
+rotating keys.
+
+`PAIRIDAEZA_DATABASE_URL` selects browser-session PostgreSQL storage; local
+development uses `pairidaeza_dev`. The current connector uses PostgreSQL without TLS.
+
+Rust tests run through `mise run test:rust` using nextest. NSH tasks pass individual
+TypeScript test files to NSH, avoiding its directory-level `cargo test` invocation.
+Test tasks claim `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` through mise.
+Auth failures shown in the application are generic.
+
+Run the real-provider browser and native authorization regressions explicitly:
+
+```sh
+mise run test:browser-auth
+```
+
+This task claims `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` through
+mise and starts or reuses the managed `webui`, `api`, and WebDriver daemons.
+Install Chrome or Chromium, the matching mise-managed ChromeDriver, and PostgreSQL with the configured
+`pairidaeza_dev` database first. The test account must be able to sign in to
+Zitadel using its username and password without an interactive second factor.
+The browser uses a fresh headless session and does not save screenshots.
+Headless-only tests remain in `test:ui`; platform tasks exclude files named
+`*.headless.test.tsx` and `*.native.test.tsx`. `test:macos` also runs the native
+authorization initiation regression.
+
+`mise run test:browser-auth` passed all three provider regressions. The browser
+test covered login, callback, provider email, fixture bootstrap, reload, logout,
+and post-logout HTTP 401. Native tests covered PKCE binding, code exchange,
+ID-token verification, UserInfo, and authenticated API bootstrap without a
+refresh token. The token serialization regression also passed.
+
+Run the focused desktop-window regression with `mise run test:desktop-auth`.
+It invokes NSH's real-host test runner for the host platform. NSH owns the
+window and cleanup; the test does not run `dev:desktop` or a desktop daemon.
+Sign-in initiation, cancellation, and retry passed on macOS. The default suite
+also passed 18 Rust tests and 51 headless NSH tests.
+
+NSH records outgoing browser URLs instead of opening them, and its installed
+test API supports callback injection only headless. The desktop-window test
+does not prove browser login or OS callback delivery. The macOS debug host also
+emits a linker warning that its `__eh_frame` section exceeds 16 MB.
+
+Full desktop UI callback completion, Linux and Windows execution, and mobile
+callback round trips remain unverified.
+
+## Vendored JWT authentication
+
+`crates/pairidaezad/src/axumext/jwtauth.rs` owns JWT bearer validation,
+Axum claims extraction, and local-key or remote-JWKS decoding. Its implementation
+is imported from
+[`axum-jwt-auth` at `0855b9cc4dcca4827073b4d7f4efe435a827e8ce`](https://github.com/cmackenzie1/axum-jwt-auth/tree/0855b9cc4dcca4827073b4d7f4efe435a827e8ce).
+The upstream MIT license is retained in `axumext/jwtauth/LICENSE`.
+Module imports are adapted locally, and HTTP-client construction errors propagate
+instead of panicking. No example keys or certificates are copied.
+
+The decoder does not implement OAuth/OIDC login or browser sessions. Callers
+configure the accepted algorithms, issuer, audience, required claims and JWKS URL.
+Remote keys refresh periodically; an unknown key ID is rejected until refresh.
+
+Run the JWT boundary tests without changing workspace feature resolution:
+
+```sh
+mise run test:rust -- -E 'test(jwtauth)'
+```
+
+The filter limits test execution, not workspace compilation.
+
 
 Chat attachments use the system file picker on desktop. On mobile, the attachment
 menu offers Photo library and Browse files. Cancellation keeps the current draft
 and attachments. Sending still stores filename markers, not uploaded file bytes.
-This requires the prebuilt NSH nightly selected in `mise.toml` and Rust crates
-pinned to `32a6f61f2c9c8c305a3719c02fd508ed61a94473`; stable 0.4.0 has no
-`Picker.pickFiles`. Return the CLI and Rust crates to releases together when
-0.4.1 or 0.5.0 is available. Run `mise install` after updating.
+The project uses the stable NSH 0.5.0 Rust crates and the CLI selected in
+`mise.toml`. Run `mise install` after updating the tool configuration.
 
 ## Theme
 
@@ -128,3 +205,21 @@ NSH 0.4 reads colors, lengths and font families from `cssVars`, but not compound
 shadow strings or `em` tracking values. Matching shadow presets, radius scale,
 spacing and tracking are configured in `nsh.json`; existing shadow surfaces use
 the adaptive `shadow-color` token. Keep these mappings synchronized with `theme.json`.
+
+## Backend observability
+
+Both executables use `crates/telemetry` for the shared trace, metric, and log
+providers. Each initializes telemetry before Tokio with its own service name
+and shuts down all three providers after the server returns, including startup
+errors. Logs shut down last so earlier shutdown failures can still be exported.
+
+Debug builds print pretty logs to stderr; release builds print JSON.
+`PAIRIDAEZA_LOG` overrides `RUST_LOG`; the default is `info`.
+Standard `OTEL_*` variables configure exporters, sampling, and metric export intervals.
+
+The mise defaults export OTLP over HTTP/protobuf to `http://127.0.0.1:4318`.
+Run a collector there for ongoing collection, or override the endpoint and
+protocol in local mise configuration for another collector.
+
+HTTP request instrumentation and end-to-end OTLP export verification are not
+part of this server wiring.

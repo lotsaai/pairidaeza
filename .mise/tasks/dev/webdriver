@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the browser regression WebDriver"
+
+set -euo pipefail
+exec chromedriver --port=17812 --log-level=OFF

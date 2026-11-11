@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Run UI tests on macos using the managed API"
+#MISE depends=["build:debug"]
+#MISE daemons=["api"]
+#MISE secrets=["TEST_USER", "TEST_USER_EMAIL", "TEST_PASSWORD"]
+
+set -euo pipefail
+for test_file in ./*.test.ts ./*.test.tsx; do
+	[[ -f "$test_file" ]] || continue
+	[[ "$test_file" != *.native.test.tsx && "$test_file" != *.headless.test.tsx ]] || continue
+	nsh test "$test_file" "$@" --target macos
+done

@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 
-#MISE description="Run the Pairidaeza app on this machine's desktop backend"
+#MISE description="Run the packaged Pairidaeza desktop app"
+#MISE depends=["dist:desktop"]
 #MISE daemons=["api"]
-
-proj_dir=$(git rev-parse --show-toplevel)
-cd "$proj_dir" || exit 1
+#MISE sources=["Cargo.toml", "Cargo.lock", "crates/*/Cargo.toml", "crates/*/**/*.rs", "crates/pairidaezad/fixtures/**", "crates/app/**", "*.ts", "*.tsx", "pages/**", "components/**", "icons/**", "fonts/**", "nsh.json", "theme.json", "tsconfig.json", "mise.toml", "mise.lock", ".mise/tasks/dist/desktop", ".mise/tasks/dev/desktop"]
 
 set -euo pipefail
 
-exec nsh dev . "$@"
+case "$(uname -s)" in
+Darwin)
+	app="$PWD/target/dist/desktop/pairidaeza.app"
+	/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$app"
+	exec "$app/Contents/MacOS/pairidaeza"
+	;;
+Linux)
+	command -v xdg-mime >/dev/null || {
+		echo "xdg-mime is required for desktop URL registration" >&2
+		exit 1
+	}
+	exec "$PWD/target/dist/desktop/pairidaeza/pairidaeza"
+	;;
+MINGW* | MSYS* | CYGWIN*)
+	exec "$PWD/target/dist/desktop/pairidaeza/pairidaeza.exe"
+	;;
+*)
+	echo "Unsupported desktop platform: $(uname -s)" >&2
+	exit 1
+	;;
+esac

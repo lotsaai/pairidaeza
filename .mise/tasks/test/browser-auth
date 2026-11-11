@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+#MISE description="Run real-provider browser and native authorization regressions"
+#MISE daemons=["webui", "webdriver"]
+#MISE secrets=["TEST_USER", "TEST_USER_EMAIL", "TEST_PASSWORD"]
+
+set -euo pipefail
+cargo nextest run --workspace --cargo-quiet --run-ignored ignored-only -E 'test(real_provider_browser_auth) | test(provider_authorization_request_binds_pkce_state_and_nonce) | test(real_provider_native_finish_and_bootstrap)' "$@"
