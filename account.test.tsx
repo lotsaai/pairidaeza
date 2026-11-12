@@ -1,10 +1,8 @@
 import { expect, test } from "nsh/test";
 import { open } from "./test-app";
 
-const wideWindow = { width: 1280, height: 800 };
-
 test("a skill is edited, saved and deleted in two steps", async () => {
-  const app = await open("./App.tsx", wideWindow);
+  const app = await open("./App.tsx");
   await app.press("role:button[Account]");
   await app.press("text:Skills");
   await app.waitFor("Your skills");
@@ -25,7 +23,7 @@ test("a skill is edited, saved and deleted in two steps", async () => {
 });
 
 test("a plugin skill is read-only and only closes", async () => {
-  const app = await open("./App.tsx", wideWindow);
+  const app = await open("./App.tsx");
   await app.press("role:button[Account]");
   await app.press("text:Skills");
   await app.waitFor("Your skills");
@@ -39,7 +37,7 @@ test("a plugin skill is read-only and only closes", async () => {
 });
 
 test("artifacts open from the account menu, search, preview and delete", async () => {
-  const app = await open("./App.tsx", wideWindow);
+  const app = await open("./App.tsx");
   app.onDialog((dialog) => {
     expect(dialog.title).toBe('Delete "Weekly growth review"?');
     return "Delete";
@@ -56,12 +54,13 @@ test("artifacts open from the account menu, search, preview and delete", async (
   await app.type("label:Search artifacts", "zzz");
   await app.waitFor("No matching artifacts");
   await app.press("text:Clear filters");
+  await app.press("role:button[Back]");
   await app.press("role:button[Delete Weekly growth review]");
   await app.waitFor("Weekly growth review", { state: "gone" });
 });
 
 test("invite friends copies the link", async () => {
-  const app = await open("./App.tsx", wideWindow);
+  const app = await open("./App.tsx");
   await app.press("role:button[Account]");
   await app.press("text:Invite friends");
   await app.waitFor("Give a friend 2 weeks free");

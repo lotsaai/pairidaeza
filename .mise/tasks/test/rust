@@ -2,7 +2,6 @@
 
 #MISE description="Run the Rust tests for this project"
 #MISE depends=["build:debug"]
-#MISE sources=["Cargo.toml", "Cargo.lock", "crates/**/Cargo.toml", "crates/**/*.rs", "crates/**/postgres/migrations/**"]
 
 proj_dir=$(git rev-parse --show-toplevel)
 cd "$proj_dir" || exit 1

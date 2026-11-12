@@ -34,42 +34,44 @@ function Shell() {
       <If
         when={wide()}
         else={
-          <NavStack state={nav} class="flex-1">
-            {(route) => {
-              switch (route.name) {
-                case "chats":
-                  return (
-                    <NavPage title="Chats" headerVisible={false}>
-                      <ChatList />
-                    </NavPage>
-                  );
-                case "chat":
-                  return (
-                    <NavPage title={chatById(route.id)?.title ?? ""} headerVisible={false}>
-                      <ChatView chatId={route.id} />
-                    </NavPage>
-                  );
-                case "bot":
-                  return (
-                    <NavPage title={botById(route.id)?.name ?? ""} headerVisible={false}>
-                      <BotPage botId={route.id} />
-                    </NavPage>
-                  );
-                case "new-group":
-                  return (
-                    <NavPage title="New group" headerVisible={false}>
-                      <NewGroupPage />
-                    </NavPage>
-                  );
-                case "artifacts":
-                  return (
-                    <NavPage title="Artifacts" headerVisible={false}>
-                      <ArtifactsPage />
-                    </NavPage>
-                  );
-              }
-            }}
-          </NavStack>
+          <View class="flex-1 pt-[env(safe-area-inset-top)]">
+            <NavStack state={nav} class="flex-1">
+              {(route) => {
+                switch (route.name) {
+                  case "chats":
+                    return (
+                      <NavPage title="Chats" headerVisible={false}>
+                        <ChatList />
+                      </NavPage>
+                    );
+                  case "chat":
+                    return (
+                      <NavPage title={chatById(route.id)?.title ?? ""} headerVisible={false}>
+                        <ChatView chatId={route.id} />
+                      </NavPage>
+                    );
+                  case "bot":
+                    return (
+                      <NavPage title={botById(route.id)?.name ?? ""} headerVisible={false}>
+                        <BotPage botId={route.id} />
+                      </NavPage>
+                    );
+                  case "new-group":
+                    return (
+                      <NavPage title="New group" headerVisible={false}>
+                        <NewGroupPage />
+                      </NavPage>
+                    );
+                  case "artifacts":
+                    return (
+                      <NavPage title="Artifacts" headerVisible={false}>
+                        <ArtifactsPage />
+                      </NavPage>
+                    );
+                }
+              }}
+            </NavStack>
+          </View>
         }
       >
         <View class="flex-1 flex-row pt-[env(safe-area-inset-top)]">

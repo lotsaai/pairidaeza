@@ -175,7 +175,7 @@ function Empty() {
 
 function Browsing() {
   return (
-    <Scroll class="flex-1" contentClass="p-4">
+    <Scroll keyboardShouldPersistTaps="handled" class="flex-1" contentClass="p-4">
       <If
         when={viewMode() === "grid"}
         else={

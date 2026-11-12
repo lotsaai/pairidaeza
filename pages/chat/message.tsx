@@ -101,7 +101,7 @@ function Frame(props: { chatId: string; message: Message; mine?: boolean; card?:
   const copied = signal(false);
   const shown = () => !wide() || hovered() || reactOpen() || moreOpen() || copied();
   return (
-    <View class={`w-full flex-row ${props.mine ? "justify-end" : "justify-start"}`}>
+    <View testID={`message-${props.message.id}`} class={`w-full flex-row ${props.mine ? "justify-end" : "justify-start"}`}>
       {/* Bubbles stop at 39rem, or at most 84% / 88% of the column, whichever is less; cards at 36rem. */}
       <View class={`flex-row ${props.card ? "w-full max-w-xl" : props.mine ? "max-w-[84%] justify-end" : "max-w-[88%]"}`}>
         <View

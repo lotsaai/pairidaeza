@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 
-#MISE description="Run the full test suite: Rust nextest and NSH"
-#MISE depends=["test:rust", "test:ui"]
+#MISE description="Verify Rust, desktop, browser, Android, and iOS sequentially"
+
+set -euo pipefail
+status=0
+for suite in rust desktop web mobile; do
+	mise run "test:$suite" "$@" || status=$?
+done
+exit "$status"

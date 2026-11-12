@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
 
-#MISE description="Open the Pairidaeza browser application"
-#MISE daemons=["webui"]
+#MISE description="Run the development browser server"
+#MISE depends=["build:debug", "dist:web"]
 
 proj_dir=$(git rev-parse --show-toplevel)
 cd "$proj_dir" || exit 1
 
 set -euo pipefail
 
-url=${PAIRIDAEZA_WEB_URL:-http://127.0.0.1:17811}
-case "$(uname -s)" in
-Darwin) exec open "$@" "$url" ;;
-Linux) exec xdg-open "$url" "$@" ;;
-*)
-	echo "No supported browser opener for $(uname -s)" >&2
-	exit 1
-	;;
-esac
+export PAIRIDAEZA_WEB_DIST="${PAIRIDAEZA_WEB_DIST:-target/dist/web/pairidaeza}"
+exec target/debug/webui "$@"

@@ -343,6 +343,7 @@ export function Roster() {
       each={rows()}
       keyExtractor={(row) => row.id}
       estimatedItemSize={64}
+      keyboardShouldPersistTaps="handled"
       class="flex-1"
       contentClass={sidebarRail() ? "pb-2" : "px-2 pb-2"}
     >

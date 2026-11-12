@@ -132,7 +132,7 @@ export function SkillsDialog() {
         </Text>
         <IconButton icon="x" label="Close skills" onPress={close} />
       </View>
-      <Scroll class="flex-1" contentClass="p-5">
+      <Scroll keyboardShouldPersistTaps="handled" class="flex-1" contentClass="p-5">
         <If when={current()} else={<SkillList />}>
           {(skill) => <Editor skill={skill()} />}
         </If>

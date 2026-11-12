@@ -118,7 +118,7 @@ test("on a phone, settings sections are pages with a way back", async () => {
   await app.press("text:Settings");
   await app.press("role:button[Organization]");
   await app.waitFor("text:Delete organization");
-  await app.press("role:button[Back]");
+  await app.back();
   await app.waitFor("role:button[Updates]");
   await app.press("role:button[Back to workspace]");
   await app.waitFor("role:button[Account]");

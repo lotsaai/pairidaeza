@@ -54,7 +54,7 @@ watch = [
 ]
 
 [daemons.webui]
-task = "dev:webui"
+task = "dev:web"
 depends = ["api"]
 ready_cmd = 'curl --fail --silent "http://${PAIRIDAEZA_WEB_ADDR:-127.0.0.1:17811}/healthz"'
 watch = [
@@ -71,7 +71,7 @@ watch = [
   "fonts/**",
   "theme.json",
   "nsh.json",
-  ".mise/tasks/dev/webui",
+  ".mise/tasks/dev/web",
   ".mise/tasks/build/**",
   ".mise/tasks/dist/web",
 ]

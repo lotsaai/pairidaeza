@@ -1,7 +1,7 @@
 import { expect, open, test } from "nsh/test";
 
 test("native sign-in offers a Zitadel authorization request and can be restarted", async () => {
-  const app = await open("./App.tsx", { network: "live", storage: {}, width: 1280, height: 800 });
+  const app = await open("./App.tsx", { network: "live", storage: {} });
   await app.waitFor("Sign in to Pairidaeza");
   await app.press("role:button[Sign in]");
   await app.waitFor("Complete sign-in in your browser.", { timeout: 20_000 });

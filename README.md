@@ -27,6 +27,24 @@ in progress. Finish authentication before changing watched files.
 Settings uses a compact header with a left-side back chevron beside its title.
 The chevron returns to the workspace; the right-side close button remains.
 
+Mobile settings and integrations use the system navigation header, including
+explicit close controls. Android Back returns from a section before closing its
+dialog. Page transitions remain owned by `NavStack`; dialogs keep their existing
+fade animation and the platform's reduced-motion behavior. Integration commands
+remain available in a content toolbar on phones because `NavPage.header` is
+desktop-only.
+
+Phone navigation reserves the top safe-area inset before rendering custom
+headers, keeping titles and Back buttons below the status bar and camera cutout.
+
+The iOS chat reserves `env(keyboard-inset-height)` beneath its transcript and
+composer. This keeps the header visible instead of allowing native keyboard
+avoidance to pan the entire page. Android retains its native resize behavior.
+
+The touch Create picker uses a searchable scroll view with 44-point rows and
+`keyboardShouldPersistTaps="handled"`, so selecting a result works while its
+search input is focused. Desktop keeps `Command` and its keyboard navigation.
+
 On macOS, the task registers the packaged app with Launch Services before
 starting it. The Linux and Windows release runners register the callback scheme
 for the current user at startup. Linux requires `xdg-mime` on PATH. Close other
@@ -60,13 +78,13 @@ use these generated queries or the application database test pattern.
 Tasks are file-based under `.mise/tasks/`.
 `build:debug` builds both executables with workspace-wide feature resolution.
 The `api` daemon runs `dev:api`, which depends only on `build:debug`.
-The `webui` daemon runs `dev:webui`, which owns `build:debug` and `dist:web`.
+The `webui` daemon runs `dev:web`, which owns `build:debug` and `dist:web`.
+`dev:web` runs the browser server; it does not open a browser.
 Do not manually repeat those dependencies or start additional server instances.
 
 ```sh
 mise daemons start webui
 mise daemons logs api webui
-mise run dev:web
 ```
 
 Both services expose `/healthz`. `PAIRIDAEZA_ADDR` configures the API listener,
@@ -127,33 +145,74 @@ TypeScript test files to NSH, avoiding its directory-level `cargo test` invocati
 Test tasks claim `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` through mise.
 Auth failures shown in the application are generic.
 
-Run the real-provider browser and native authorization regressions explicitly:
+Verification is organized by application surface:
 
 ```sh
-mise run test:browser-auth
+mise test                 # Rust, desktop, web, then both mobile targets
+mise run test:desktop     # Host desktop app, native sign-in, and model checks
+mise run test:web         # Browser UI and real-provider authentication
+mise run test:mobile      # Android, then iOS
+mise run test:android     # Android only
+mise run test:ios         # iOS only
 ```
 
-This task claims `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` through
-mise and starts or reuses the managed `webui`, `api`, and WebDriver daemons.
-Install Chrome or Chromium, the matching mise-managed ChromeDriver, and PostgreSQL with the configured
-`pairidaeza_dev` database first. The test account must be able to sign in to
-Zitadel using its username and password without an interactive second factor.
-The browser uses a fresh headless session and does not save screenshots.
-Headless-only tests remain in `test:ui`; platform tasks exclude files named
-`*.headless.test.tsx` and `*.native.test.tsx`. `test:macos` also runs the native
-authorization initiation regression.
+The default task runs each suite sequentially because NSH targets share build
+output. Every suite is attempted; any failed suite makes the command fail.
+Both mobile targets must be available; unavailable targets are not skipped.
+`test:desktop` selects macOS, Linux, or Windows from the host OS and includes
+the existing non-rendered model/native-binding checks as well as real-host UI
+journeys. There is no separate headless UI entrypoint.
 
-`mise run test:browser-auth` passed all three provider regressions. The browser
+`test:web` starts or reuses the managed `webui`, `api`, and WebDriver daemons.
+It runs browser UI journeys and the existing Rust real-provider browser/native
+authorization regressions. NSH arguments such as `--trace` apply to UI journeys,
+not the Rust runner.
+Install Chrome or Chromium, the matching mise-managed ChromeDriver, and PostgreSQL
+with the configured `pairidaeza_dev` database first. The test account must be able
+to sign in to Zitadel using its username and password without an interactive
+second factor. The provider journey uses a fresh headless browser session and
+does not save screenshots.
+
+Run full mobile verification with `mise run test:mobile`. It runs Android and
+iOS sequentially, attempts both suites even when one fails, and reports failure
+if either fails. Both configured device targets must be available.
+Individual targets remain available as `mise run test:android -- --trace -v`
+and `mise run test:ios -- --trace -v`. These tasks run real native sign-in initiation,
+shared account and API checks, and `mobile.test.tsx` on the device's own screen.
+The mobile tests use touch-visible message controls and phone navigation rather
+than desktop viewport sizes or hover. Desktop and browser coverage stays in the
+desktop and web tasks. Every mobile test file runs, and any failure makes the task
+fail.
+
+Android native authentication verifies TLS against the bundled Mozilla root
+certificates from `webpki-root-certs`, already used by NSH. The Android host does
+not initialize the JNI context required by reqwest's default platform verifier.
+Certificate and hostname verification remain enabled. Updating this root set
+requires rebuilding the app; Android-installed custom CAs are not included.
+
+Native test reports are not proof of a complete mobile sign-in round trip.
+In NSH 0.5.0, the iOS driver's `app.back()` treats a full-screen dialog as a
+swipe-dismissable sheet rather than navigating its inner stack. Verify the
+system Back control separately; do not replace a failing assertion with a
+passing check against content underneath the dialog. Likewise, wait for a
+dialog to disappear before interacting with the workspace behind it.
+UIKit system bar items also have no NSH view for `app.press()` to target.
+Verify these controls through the simulator's actual window, retaining the
+before/after screenshots and resulting route/dialog state. Direct computer
+interaction verified Organization Back, Close settings, and Close integrations
+on iOS 27.2; the corresponding NSH-only journeys still report failures.
+
+Earlier verification passed all three provider regressions, now included in `test:web`. The browser
 test covered login, callback, provider email, fixture bootstrap, reload, logout,
 and post-logout HTTP 401. Native tests covered PKCE binding, code exchange,
 ID-token verification, UserInfo, and authenticated API bootstrap without a
 refresh token. The token serialization regression also passed.
 
-Run the focused desktop-window regression with `mise run test:desktop-auth`.
-It invokes NSH's real-host test runner for the host platform. NSH owns the
-window and cleanup; the test does not run `dev:desktop` or a desktop daemon.
-Sign-in initiation, cancellation, and retry passed on macOS. The default suite
-also passed 18 Rust tests and 51 headless NSH tests.
+`mise run test:desktop` includes the desktop-window sign-in regression.
+NSH owns each test window and cleanup; it does not run `dev:desktop` or a desktop
+daemon. Earlier verification passed sign-in initiation, cancellation, and retry
+on macOS, 18 Rust tests, and 59 non-rendered NSH tests. Those results predate
+the task consolidation and are not a full all-surface verification result.
 
 NSH records outgoing browser URLs instead of opening them, and its installed
 test API supports callback injection only headless. The desktop-window test

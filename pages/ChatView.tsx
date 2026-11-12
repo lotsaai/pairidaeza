@@ -1,5 +1,5 @@
 // One chat: its header floating over the transcript, and the composer.
-import { type ListRef, List, signal, Text, View } from "nsh";
+import { type ListRef, List, platform, signal, Text, View } from "nsh";
 import { Button } from "nsh/base";
 import { userBubbleColors } from "../components/colors";
 import { ChatAvatar, Icon, IconButton } from "../components/ui";
@@ -42,9 +42,10 @@ export function ChatView(props: { chatId: string }) {
   };
   const shown = () => messagesFor(props.chatId).filter((m) => m.kind !== "tool" || currentPreferences().showToolActivity);
   return (
-    <View class="flex-1 bg-background">
+    <View class="flex-1 bg-background" style={{ paddingBottom: platform.os === "ios" ? "env(keyboard-inset-height)" : 0 }}>
       <View class="flex-1">
         <List
+          testID="chat-messages"
           ref={(node: ListRef) => (list = node)}
           each={shown()}
           keyExtractor={(m) => m.id}

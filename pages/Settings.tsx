@@ -1,6 +1,6 @@
 // Settings take over the window. Wide windows: the sections in a sidebar beside the one shown.
 // Phones: the sections as a list, each pushed as a page of the settings stack.
-import { type JSX, Scroll, signal, Text, View } from "nsh";
+import { type JSX, platform, Scroll, signal, Text, View } from "nsh";
 import { AlertDialog, Button, Dialog, Input, NavPage, NavStack } from "nsh/base";
 import { SelectField, Segmented, SettingsGroup, SettingsRow, SwitchSetting } from "../components/settings";
 import { AccountAvatar, fieldClass, Icon, IconButton, type IconName, NavRow, TextButton } from "../components/ui";
@@ -342,7 +342,16 @@ function Header(props: { title: string }) {
 
 function Page(props: { title: string; children: JSX.Element }) {
   return (
-    <NavPage title={props.title} header={<Header title={props.title} />} class="bg-background">
+    <NavPage
+      title={props.title}
+      header={platform.desktop ? <Header title={props.title} /> : undefined}
+      headerLeft={
+        settingsNav.routes().length === 1 ? <IconButton icon="chevron-left" label="Back to workspace" onPress={close} /> : undefined
+      }
+      headerRight={<IconButton icon="x" label="Close settings" onPress={close} />}
+      ios={{ headerRightSystemItem: "close" }}
+      class="bg-background"
+    >
       <Scroll class="flex-1" contentClass="gap-6 p-4 pb-[env(safe-area-inset-bottom)]">
         {props.children}
       </Scroll>
@@ -392,6 +401,12 @@ export function SettingsModal() {
     <Dialog
       open={settingsOpen()}
       onOpenChange={({ open }) => settingsOpen.set(open)}
+      closeOnEscape={wide()}
+      onCancel={() => {
+        if (wide()) return;
+        if (settingsNav.routes().length > 1) settingsNav.pop();
+        else close();
+      }}
       animation="fade"
       presentation="fullScreen"
       class="flex-1 bg-background"

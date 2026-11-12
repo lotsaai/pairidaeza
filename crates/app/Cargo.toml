@@ -12,6 +12,9 @@ serde.workspace = true
 serde_json.workspace = true
 url.workspace = true
 
+[target.'cfg(target_os = "android")'.dependencies]
+webpki-root-certs = "1"
+
 [dependencies]
 nsh-base.workspace = true
 nsh-core.workspace = true

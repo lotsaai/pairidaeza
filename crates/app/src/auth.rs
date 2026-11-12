@@ -67,10 +67,17 @@ mod native {
   }
 
   fn http_client() -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
-      .redirect(reqwest::redirect::Policy::none())
-      .build()
-      .map_err(|e| e.to_string())
+    let builder = reqwest::Client::builder().redirect(reqwest::redirect::Policy::none());
+    #[cfg(target_os = "android")]
+    let builder = {
+      let certificates = webpki_root_certs::TLS_SERVER_ROOT_CERTS
+        .iter()
+        .map(|certificate| reqwest::Certificate::from_der(certificate.as_ref()))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+      builder.tls_certs_only(certificates)
+    };
+    builder.build().map_err(|e| e.to_string())
   }
 
   async fn request(client: reqwest::Client, request: http::Request<Vec<u8>>) -> Result<http::Response<Vec<u8>>, reqwest::Error> {

@@ -1,6 +1,6 @@
 // Integrations take over the window like Settings: apps, plugins and MCP servers to add, and what is connected.
 // Wide windows: the view under a header. Phones: the views as pages of a stack, each with a way back.
-import { effect, type JSX, Scroll, Text, untracked, View } from "nsh";
+import { effect, type JSX, platform, Scroll, Text, untracked, View } from "nsh";
 import { Button, Dialog, NavPage, NavStack } from "nsh/base";
 import { AppMenu, Icon, IconButton, MenuDivider, MenuRow } from "../components/ui";
 import { integrationsOpen, wide } from "../nav";
@@ -87,21 +87,9 @@ function ConnectedButton() {
   );
 }
 
-function Header(props: { route: Route }) {
+function Actions(props: { route: Route }) {
   return (
-    <View
-      class={
-        wide()
-          ? "flex-row items-center gap-3 border-b border-border px-8 pt-12 pb-5"
-          : "h-14 flex-row items-center gap-2 border-b border-border px-3"
-      }
-    >
-      <If when={props.route.name !== "browse"}>
-        <IconButton icon="chevron-left" label="Back" onPress={() => stack.pop()} />
-      </If>
-      <Text role="header" class="min-w-0 flex-1 truncate text-xl font-medium text-foreground">
-        {titleOf(props.route)}
-      </Text>
+    <>
       <If when={props.route.name === "browse"}>
         <Button
           accessibilityLabel="Templates"
@@ -117,6 +105,26 @@ function Header(props: { route: Route }) {
       <If when={props.route.name === "browse" || props.route.name === "manage"}>
         <AddMenu />
       </If>
+    </>
+  );
+}
+
+function Header(props: { route: Route }) {
+  return (
+    <View
+      class={
+        wide()
+          ? "flex-row items-center gap-3 border-b border-border px-8 pt-12 pb-5"
+          : "h-14 flex-row items-center gap-2 border-b border-border px-3"
+      }
+    >
+      <If when={props.route.name !== "browse"}>
+        <IconButton icon="chevron-left" label="Back" onPress={() => stack.pop()} />
+      </If>
+      <Text role="header" class="min-w-0 flex-1 truncate text-xl font-medium text-foreground">
+        {titleOf(props.route)}
+      </Text>
+      <Actions route={props.route} />
       <IconButton icon="x" label="Close integrations" onPress={close} />
     </View>
   );
@@ -160,6 +168,12 @@ export function IntegrationsModal() {
     <Dialog
       open={integrationsOpen()}
       onOpenChange={({ open }) => integrationsOpen.set(open)}
+      closeOnEscape={wide()}
+      onCancel={() => {
+        if (wide()) return;
+        if (stack.routes().length > 1) stack.pop();
+        else close();
+      }}
       animation="fade"
       presentation="fullScreen"
       class="flex-1 bg-background"
@@ -170,7 +184,18 @@ export function IntegrationsModal() {
         else={
           <NavStack state={stack} class="flex-1">
             {(route) => (
-              <NavPage title={titleOf(route)} header={<Header route={route} />} class="bg-background">
+              <NavPage
+                title={titleOf(route)}
+                header={platform.desktop ? <Header route={route} /> : undefined}
+                headerRight={<IconButton icon="x" label="Close integrations" onPress={close} />}
+                ios={{ headerRightSystemItem: "close" }}
+                class="bg-background"
+              >
+                <If when={!platform.desktop}>
+                  <View class="flex-row items-center justify-end gap-2 border-b border-border px-3 py-2">
+                    <Actions route={route} />
+                  </View>
+                </If>
                 <Content route={route} />
               </NavPage>
             )}

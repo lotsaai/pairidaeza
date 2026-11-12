@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#MISE description="Run full Android and iOS verification sequentially"
+
+set -euo pipefail
+status=0
+for target in android ios; do
+	mise run "test:$target" "$@" || status=$?
+done
+exit "$status"
