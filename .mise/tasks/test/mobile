@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
-#MISE description="Run full Android and iOS verification sequentially"
+#MISE description="Verify Android on Linux and iOS on macOS"
 
 set -euo pipefail
+case "$(uname -s)" in
+Linux) targets=(android) ;;
+Darwin) targets=(ios) ;;
+*)
+	echo "Unsupported Unix mobile test platform: $(uname -s)" >&2
+	exit 1
+	;;
+esac
+
 status=0
-for target in android ios; do
+for target in "${targets[@]}"; do
 	mise run "test:$target" "$@" || status=$?
 done
 exit "$status"

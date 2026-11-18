@@ -20,7 +20,7 @@ The native journey starts with `storage: {}` and `network: "live"`. No saved pro
 
 For an interactive packaged desktop run, use `mise run dev:desktop`. It owns packaging and Launch Services registration and starts or reuses the managed API. Stop only that foreground task. Never run it beside a native sign-in test or another Pairidaeza instance, because the callback scheme is shared.
 
-For browser session verification, use `mise run test:web`. This includes browser UI and real-provider authentication. It claims `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` without printing them, and starts or reuses `api`, `webui`, and `webdriver` on ports 17810, 17811, and 17812. Require Chrome or Chromium, the configured ChromeDriver, PostgreSQL, and the `pairidaeza_dev` database. A fresh database must already exist with permission to create schemas and tables. `webui` creates its session tables during startup before serving. API application documents are fixture-backed; no application-data seed command is needed. Read `README.md` and `mise.toml` for configuration. Do not read or print protected secret files.
+For browser session verification, use `mise run test:web`. Follow the browser and database prerequisites in [Development Workflow](../../../AGENTS.md#development-workflow-mise). The database role needs permission to create schemas and tables for `webui` startup. If a required environment variable is missing, stop and report its name. Never open secret files or look up the value.
 
 Browser readiness requires both `/healthz` endpoints, the rendered signed-out page, and successful real-provider login plus fixture bootstrap. A database health check alone is insufficient. An absent database, missing credentials, or interactive second factor is a failed precondition, not permission to mock login. Browser setup from an empty PostgreSQL database is not proved by the native journey.
 
@@ -65,7 +65,7 @@ print("Desktop suite passed, including native sign-in initiation, cancel, and re
 
 `auth.integration.test.tsx` imports `open` directly from `nsh/test`. It presses `role:button[Sign in]`, waits for `Complete sign-in in your browser.`, validates the real authorization request, presses `role:button[Cancel]`, and retries with new PKCE, state, and nonce values. Require this named journey to pass within the desktop suite.
 
-For fixture UI journeys, use `mise run test:desktop -- --trace` on the desktop host, `mise run test:web -- --trace` for browser rendering, or `mise run test:mobile -- --trace` for both Android and iOS. These tasks run the existing surface suites. Do not add filters, custom launchers, or replacement test tasks. `test-app.ts` intercepts the existing bootstrap/document HTTP boundaries and supplies an isolated fixture identity. This proves fixture UI behaviour, never authentication or server persistence. Non-rendered runs cannot prove geometry.
+For fixture UI journeys, use `mise run test:desktop -- --trace` on the desktop host, `mise run test:web -- --trace` for browser rendering, or `mise run test:mobile -- --trace` for the host's mobile target. These tasks run the existing platform suites. Do not add filters, custom launchers, or replacement test tasks. `test-app.ts` intercepts the existing bootstrap/document HTTP boundaries and supplies an isolated fixture identity. This proves fixture UI behaviour, never authentication or server persistence. Non-rendered runs cannot prove geometry.
 
 For browser authentication, retain the existing Rust Fantoccini journey at `crates/webui/tests/browser_auth.rs`. It drives the packaged page through real login, profile, reload, and logout. For extra browser interaction or screenshots, open an isolated browser through the available browser tool, navigate to `http://127.0.0.1:17811/`, and use that feature's CSS selectors. Never borrow the user's signed-in tab, inject tokens, call internal setters, or replace provider requests.
 
@@ -99,6 +99,6 @@ write(str(proof / "evidence-survived.txt"), "Doctor, command, trace, and JUnit r
 
 ## Helpers
 
-No new executable helpers are shipped. Reuse `.mise/tasks/test/desktop-auth`, `.mise/tasks/test/browser-auth`, and the platform suite tasks above. Python snippets run in the agent's Eval kernel using its `sh` and `write` helpers.
+Reuse the platform suite tasks above. Python snippets run in the agent's Eval kernel using its `sh` and `write` helpers.
 
 Maintain the feature map with `/skill:maintain-verification-skill` when user paths or verification prerequisites change.

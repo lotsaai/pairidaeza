@@ -55,7 +55,7 @@ Banned domain vocabulary with required replacements: "birth"/"born" → "join"/"
 
 ### Mise Environment
 
-> **CRITICAL: Do not ever try to fix `mise` environment related issues. Escalate to the user immediately.**
+If a mise task fails because a required environment variable is missing, stop that task and report the variable name. Never read or open secret files, including fnox configuration, or look for secret values through mise, fnox, or another route. Tool declarations, task scripts, and lockfile failures can be investigated without accessing secrets.
 
 ### Linting & Code Quality
 
@@ -123,6 +123,7 @@ Do not write NSH code from memory or by analogy with React, React Native or CSS.
 - Entrypoints own file/environment loading and pass typed settings into their services. `pairidaezad::Config` loads API settings from `pairidaeza/backend.toml`; `webui` loads browser settings from `pairidaeza/webui.toml` in the user config directory, using the existing `confique` pattern and environment bindings.
 - `protocol` and downstream operation/storage helpers must not read process environment or configuration files. `telemetry` may consume standard `OTEL_*` and logging environment settings through its observability libraries.
 - Native authentication configuration is supplied through the existing mise build and NSH bindings. Never embed secrets into TSX or native application assets.
+- Browser sign-in uses `PAIRIDAEZA_AUTH__CLIENT_ID` and the registered `PAIRIDAEZA_AUTH__REDIRECT_URI`. Native sign-in uses `PAIRIDAEZA_AUTH__NATIVE_CLIENT_ID` and `ai.lotsa.pairidaeza:/auth`. Both registrations must issue JWT access tokens from `PAIRIDAEZA_AUTH__ISSUER` for the project audience in `PAIRIDAEZA_AUTH__PROJECT_ID`.
 - Do not introduce a CLI parser just for consistency. If adding CLI options, parse with `clap` at the owning entrypoint and pass typed settings downstream. Add subcommands for related operations rather than proliferating binaries; the existing browser and API services remain separate processes.
 - Reuse `.mise/tasks/` and existing daemon dependency declarations. Do not manually duplicate builds, asset packaging, or server instances.
 
@@ -147,18 +148,48 @@ These are change/review requirements, not a claim that every existing module alr
 
 **ALWAYS** use `mise` tasks for development. Only run direct toolchain commands if no `mise` wrapper exists.
 
+Run `mise install` after changing the project's tool configuration.
+
 **NEVER** run "targeted" tests, the cost is not the test it's the compilation of the modules.
 **NEVER** run `cargo test`, it is not a win, it has the opposite outcome.
 
 | Task | Description |
 |---|---|
-| `mise format` | Checks for this codebase (check, clippy `-D warnings`, rustfmt, cargo-sort, toml/whitespace guards). |
-| `mise test` | All tests through the existing Rust nextest and NSH task aggregator. |
+| `mise format` | Run HK's lint and fix steps. Read the report and fix passes. |
+| `mise verify` | Run HK checks and the host's verification suites through `check` and `test`. |
+| `mise test` | Run Rust, desktop, browser, and Android verification on Linux; Rust, desktop, and iOS on macOS; Rust and desktop on Windows using native PowerShell. |
+| `mise run test:mobile` | Run Android verification on Linux or iOS verification on macOS. |
+| `mise run test:desktop` | Run host desktop UI and native sign-in checks, plus non-rendered model and binding tests. |
+| `mise run test:web` | Run browser UI journeys and real-provider browser and native auth regressions. |
+| `mise run test:android` / `mise run test:ios` | Run native sign-in initiation, account, API, and touch UI checks on the selected mobile target. |
+| `mise run test:rust` | Run workspace Rust tests with nextest. |
 | `mise run --force test` | Force a fresh full test run (bypass cache). |
 | `mise check` | Run hk checks, including NSH checking. |
 | `mise build` | Build through the existing debug-build task. |
 | `mise run dev:desktop` | Run the packaged desktop app in the foreground. |
-| `mise run dev:web` | Start/reuse managed browser/API services and open the web UI. |
+| `mise run dev:ios` / `mise run dev:android` | Run the app on an iOS simulator or an Android device or emulator. |
+| `mise run dev:web` | Run `webui` with development assets. Does not launch a browser. |
+| `mise run dist:webui` | Bundle the host's release browser server and web assets under `target/dist/webui/`. |
+
+### Run the app and services
+
+- For a managed browser run, use `mise daemons start webui`, then open `http://127.0.0.1:17811/`. The `webui` daemon starts or reuses `api`. The defaults are port 17811 for `webui` and 17810 for `api`. Both expose `/healthz`. Inspect their logs with `mise daemons logs api webui`.
+- Browser sessions need PostgreSQL. Start the existing service with `docker compose up -d --wait postgres`. Create the configured database with SQLx (`sqlx database create` with `DATABASE_URL` set to `PAIRIDAEZA_DATABASE_URL`). The development database is `pairidaeza_dev` by default. `webui` creates its session tables at startup. Fixture application data needs no seed.
+- Desktop and mobile launch tasks start or reuse `api`. Desktop packages the app when its inputs change. Use `mise watch dev:desktop` to relaunch after edits, but finish any sign-in first: restarting loses the pending authentication transaction. Close other Pairidaeza instances before testing the shared native callback. The macOS launch task registers the packaged app with Launch Services. Linux requires `xdg-mime` on `PATH`.
+- Start an iOS simulator or connect an Android target before running its task. Android needs `adb` on `PATH`. `dev:android` sets up `adb reverse` for a loopback API URL. For Android tests using the default local API, set up `adb reverse tcp:17810 tcp:17810` first.
+- `dist:webui` produces a `webui` executable and a `public/` directory. Build for the deployment host and keep the two together. Run `./webui` from the bundle directory, or set `PAIRIDAEZA_WEB_DIST` to the assets directory. The API runs separately.
+- For local telemetry collection, the mise defaults send OTLP over HTTP/protobuf to `http://127.0.0.1:4318`. Run a collector there or configure the endpoint and protocol with `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_PROTOCOL`.
+
+### Verification prerequisites
+
+- Keep `test` and `test:mobile` as platform-aware scripts, not dependency lists. Run selected suites sequentially because NSH targets share build output. Attempt every selected suite and return failure if any suite fails. Windows verification uses native PowerShell.
+- `test:web` uses managed `webui`, `api`, and `webdriver` daemons. It needs the PostgreSQL setup above, Chrome or Chromium, and a matching mise-managed ChromeDriver on port 17812. The Zitadel test account must allow password sign-in without an interactive second factor. The task requests `TEST_USER`, `TEST_USER_EMAIL`, and `TEST_PASSWORD` through mise. NSH arguments like `--trace` apply to UI journeys, not nextest.
+- Native sign-in tests that record an outgoing URL prove initiation, not that the OS opened a browser or delivered a callback. Verify callback delivery separately in the packaged app. Non-rendered tests do not prove native layout or system navigation.
+- CI provisions runner prerequisites and calls `mise verify`. Do not duplicate HK, builds, or suite selection in workflow YAML. Reuse the Compose database and SQLx rather than installing another PostgreSQL. Use unversioned hosted runner labels. Leave CI changes local for review until the user explicitly authorises publishing.
+
+### Regenerate application SQL bindings
+
+Keep queries in `crates/pairidaezad/postgres/queries/` and SQLx migrations in `crates/pairidaezad/postgres/migrations/`. After changing either, run `mise run generate:sql:pairidaezad`. `sqlc.json` configures the Rust generator for `deadpool-postgres`. Keep browser-session migrations and persistence separate.
 
 **IMPORTANT**: After changes, **ALWAYS** run:
 1. `mise format`

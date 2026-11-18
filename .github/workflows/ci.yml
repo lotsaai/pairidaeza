@@ -1,0 +1,81 @@
+---
+name: CI
+
+"on":
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+env:
+  FNOX_NON_INTERACTIVE: "true"
+  FNOX_IF_MISSING: error
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v4
+        with:
+          experimental: true
+          install: true
+          cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: macos
+      - run: mise verify
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang libclang-dev pkg-config libssl-dev libgtk-4-dev \
+            libwebkitgtk-6.0-dev libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev xvfb xauth
+      - uses: jdx/mise-action@v4
+        with:
+          experimental: true
+          install: true
+          cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: linux
+      - uses: browser-actions/setup-chrome@v2
+        id: chrome
+        with:
+          chrome-version: 157
+          install-dependencies: true
+      - name: Configure Chrome
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/chrome-bin"
+          ln -s "$CHROME_PATH" "$RUNNER_TEMP/chrome-bin/google-chrome"
+          echo "$RUNNER_TEMP/chrome-bin" >> "$GITHUB_PATH"
+      - name: Start database
+        run: |
+          docker compose up -d --wait postgres
+          DATABASE_URL="$PAIRIDAEZA_DATABASE_URL" sqlx database create
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | \
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disk-size: 16G
+          disable-animations: false
+          script: |
+            adb reverse tcp:17810 tcp:17810
+            xvfb-run -a mise verify

@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
-#MISE description="Verify Rust, desktop, browser, Android, and iOS sequentially"
+#MISE description="Verify the host's Rust, desktop, browser, and mobile suites"
 
 set -euo pipefail
+case "$(uname -s)" in
+Linux) suites=(rust desktop web mobile) ;;
+Darwin) suites=(rust desktop mobile) ;;
+*)
+	echo "Unsupported Unix test platform: $(uname -s)" >&2
+	exit 1
+	;;
+esac
+
 status=0
-for suite in rust desktop web mobile; do
+for suite in "${suites[@]}"; do
 	mise run "test:$suite" "$@" || status=$?
 done
 exit "$status"

@@ -12,7 +12,6 @@ python.uv_venv_auto = "create|source"
 [tools]
 worktrunk = { version = "latest", workflow = "release.yaml" }
 "npm:oxfmt" = "latest"
-"github:1jehuang/jcode" = "latest"
 "aqua:nextest-rs/nextest/cargo-nextest" = "latest"
 chromedriver = "157"
 pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
@@ -37,6 +36,7 @@ zig = "latest"
 "cargo:docsrs-mcp" = "latest"
 "go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
 "cargo:sqlx-cli" = "latest"
+"pypi:yamllint" = "latest"
 
 [secrets.fnox]
 
