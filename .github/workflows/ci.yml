@@ -47,18 +47,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: linux
-      - uses: browser-actions/setup-chrome@v2
-        id: chrome
-        with:
-          chrome-version: 157
-          install-dependencies: true
-      - name: Configure Chrome
-        env:
-          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/chrome-bin"
-          ln -s "$CHROME_PATH" "$RUNNER_TEMP/chrome-bin/google-chrome"
-          echo "$RUNNER_TEMP/chrome-bin" >> "$GITHUB_PATH"
       - name: Start database
         run: |
           docker compose up -d --wait postgres
@@ -69,13 +57,4 @@ jobs:
             sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          disk-size: 16G
-          disable-animations: false
-          script: |
-            adb reverse tcp:17810 tcp:17810
-            xvfb-run -a mise verify
+      - run: xvfb-run -a mise verify

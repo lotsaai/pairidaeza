@@ -11,7 +11,8 @@ async fn real_provider_browser_auth() {
     .install_default()
     .expect("install rustls crypto provider");
   let mut caps = serde_json::Map::new();
-  caps.insert("goog:chromeOptions".into(), json!({"args": ["--headless=new"]}));
+  let chrome = std::env::var("PAIRIDAEZA_TEST_CHROME").expect("PAIRIDAEZA_TEST_CHROME must be set");
+  caps.insert("goog:chromeOptions".into(), json!({"binary": chrome, "args": ["--headless=new"]}));
   let client = ClientBuilder::rustls()
     .expect("WebDriver TLS setup failed")
     .capabilities(caps)
@@ -64,6 +65,7 @@ async fn real_provider_browser_auth() {
 }
 
 async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Result<(), &'static str> {
+  let logout = Locator::Css("[role='menuitem']:is([aria-label='Log out'], :has([aria-label='Log out']))");
   client.goto("http://127.0.0.1:17811/").await.map_err(|_| "open app")?;
   client
     .wait()
@@ -118,7 +120,7 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
     .map_err(|_| "open account")?;
   client
     .wait()
-    .for_element(Locator::Css("[aria-label='Log out']"))
+    .for_element(logout.clone())
     .await
     .map_err(|_| "wait for account menu")?;
   let profile = client
@@ -151,7 +153,7 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
     .map_err(|_| "open reloaded account")?;
   client
     .wait()
-    .for_element(Locator::Css("[aria-label='Log out']"))
+    .for_element(logout.clone())
     .await
     .map_err(|_| "wait for reloaded account menu")?;
   let profile = client
@@ -166,12 +168,15 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
   }
   client
     .wait()
-    .for_element(Locator::Css("[aria-label='Log out']"))
+    .for_element(logout)
     .await
     .map_err(|_| "find logout")?
-    .click()
+    .send_keys("\u{e007}")
     .await
-    .map_err(|_| "click logout")?;
+    .map_err(|error| {
+      eprintln!("logout menu item keyboard activation failed: {error}");
+      "activate logout"
+    })?;
   client
     .wait()
     .for_element(Locator::Css("[aria-label='Sign in to Pairidaeza']"))

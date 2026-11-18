@@ -6,11 +6,19 @@
 #MISE secrets=["TEST_USER", "TEST_USER_EMAIL", "TEST_PASSWORD"]
 
 set -euo pipefail
+chrome=$(mise where http:chrome-for-testing)
+export PAIRIDAEZA_TEST_CHROME="$chrome/chrome"
+driver_version=$(mise current http:chromedriver-for-testing)
+running_version=$(curl -fsS --max-time 5 http://127.0.0.1:17812/status | jq -er '.value.build.version | split(" ")[0]')
+if [[ "$running_version" != "$driver_version" ]]; then
+	echo "Running ChromeDriver is $running_version, expected $driver_version. Run mise daemons restart webdriver." >&2
+	exit 1
+fi
 status=0
 for test_file in ./*.test.ts ./*.test.tsx; do
 	[[ -f "$test_file" ]] || continue
 	[[ "$test_file" != ./auth.integration.test.tsx && "$test_file" != *.native.test.tsx && "$test_file" != *.headless.test.tsx ]] || continue
-	nsh test "$test_file" "$@" --target web || status=$?
+	nsh test "$test_file" "$@" --target web --browser "$PAIRIDAEZA_TEST_CHROME" || status=$?
 done
 cargo nextest run --workspace --cargo-quiet --run-ignored ignored-only -E 'test(real_provider_browser_auth) | test(provider_authorization_request_binds_pkce_state_and_nonce) | test(real_provider_native_finish_and_bootstrap)' || status=$?
 exit "$status"

@@ -413,11 +413,12 @@ mod native {
       let user = std::env::var("TEST_USER").expect("TEST_USER must be set");
       let email = std::env::var("TEST_USER_EMAIL").expect("TEST_USER_EMAIL must be set");
       let password = std::env::var("TEST_PASSWORD").expect("TEST_PASSWORD must be set");
+      let chrome = std::env::var("PAIRIDAEZA_TEST_CHROME").expect("PAIRIDAEZA_TEST_CHROME must be set");
       rustls::crypto::ring::default_provider()
         .install_default()
         .expect("install rustls crypto provider");
       let mut caps = serde_json::Map::new();
-      caps.insert("goog:chromeOptions".into(), json!({"args": ["--headless=new"]}));
+      caps.insert("goog:chromeOptions".into(), json!({"binary": chrome, "args": ["--headless=new"]}));
       caps.insert("goog:loggingPrefs".into(), json!({"performance": "ALL"}));
       let client = ClientBuilder::rustls()
         .expect("WebDriver TLS setup failed")

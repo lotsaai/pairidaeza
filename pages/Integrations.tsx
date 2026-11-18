@@ -187,7 +187,7 @@ export function IntegrationsModal() {
               <NavPage
                 title={titleOf(route)}
                 header={platform.desktop ? <Header route={route} /> : undefined}
-                headerRight={<IconButton icon="x" label="Close integrations" onPress={close} />}
+                headerRight={platform.desktop ? undefined : <IconButton icon="x" label="Close integrations" onPress={close} />}
                 ios={{ headerRightSystemItem: "close" }}
                 class="bg-background"
               >

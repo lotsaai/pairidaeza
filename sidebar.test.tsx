@@ -112,6 +112,13 @@ test("dragging the sidebar's edge below the snap width folds it to the rail", as
   await app.waitFor("role:button[Show bots]");
 });
 
+test("dragging the details panel's edge resizes it and saves the width", async () => {
+  const app = await open("./App.tsx", wideWindow);
+  await app.press("role:button[Launch team details]");
+  await app.drag("label:Resize details panel", { x: -100 });
+  await app.waitUntil(() => app.storage()["pairidaeza.panelWidth"] === "484");
+});
+
 test("with several spaces, headers name the space, and its actions delete it", async () => {
   const app = await open("./App.tsx", wideWindow);
   await app.press("role:button[Create]");

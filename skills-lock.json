@@ -79,6 +79,13 @@
       "skillPath": "skills/k2/SKILL.md",
       "computedHash": "29ab07c312e862a15017cee1169cd58d719b840e3190f14add5aa59aa21c9237"
     },
+    "microsandbox": {
+      "source": "superradcompany/skills",
+      "commit": "62403288e8102486ea47f379e19dc2e2c0f7e5e2",
+      "sourceType": "github",
+      "skillPath": "microsandbox/SKILL.md",
+      "computedHash": "2a9d92334f3f8bbf9be102a26e7cf55e708257ddd0f3d96f960dc42cad3628ed"
+    },
     "mise": {
       "source": "oakoss/agent-skills",
       "sourceType": "github",

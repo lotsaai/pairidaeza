@@ -2,10 +2,15 @@
 
 #MISE description="Run UI tests on android using the managed API"
 #MISE depends=["build:debug"]
-#MISE daemons=["api"]
-#MISE secrets=["TEST_USER", "TEST_USER_EMAIL", "TEST_PASSWORD"]
+#MISE daemons=["api", "android-emulator"]
+#MISE env={ADB_SERVER_SOCKET="tcp:127.0.0.1:17813"}
 
 set -euo pipefail
+
+if [[ $PAIRIDAEZA_API_URL =~ ^https?://(127\.0\.0\.1|localhost):([0-9]+)(/|$) ]]; then
+	adb -s emulator-5680 reverse "tcp:${BASH_REMATCH[2]}" "tcp:${BASH_REMATCH[2]}"
+fi
+
 status=0
 for test_file in ./auth.integration.test.tsx ./account.test.tsx ./api.test.tsx ./mobile.test.tsx; do
 	nsh test "$test_file" "$@" --target android || status=$?
