@@ -37,6 +37,7 @@ zig = "latest"
 "go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
 "cargo:sqlx-cli" = "latest"
 "pypi:yamllint" = "latest"
+"go:filippo.io/age/extra/age-plugin-tag" = "latest"
 
 [secrets.fnox]
 
