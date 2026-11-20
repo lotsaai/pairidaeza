@@ -118,11 +118,7 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
     .click()
     .await
     .map_err(|_| "open account")?;
-  client
-    .wait()
-    .for_element(logout)
-    .await
-    .map_err(|_| "wait for account menu")?;
+  client.wait().for_element(logout).await.map_err(|_| "wait for account menu")?;
   let profile = client
     .execute(
       "return [...document.querySelectorAll('[aria-label]')].some(el => el.getAttribute('aria-label') === arguments[0])",
