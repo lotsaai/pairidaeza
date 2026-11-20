@@ -26,7 +26,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: macos
+      - name: Write test credentials
+        env:
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          jq -rn '"[secrets]\nTEST_USER = { default = \(env.TEST_USER | tojson) }\nTEST_USER_EMAIL = { default = \(env.TEST_USER_EMAIL | tojson) }\nTEST_PASSWORD = { default = \(env.TEST_PASSWORD | tojson) }"' > fnox.local.toml
       - run: mise verify
+      - name: Remove test credentials
+        if: always()
+        run: rm -f fnox.local.toml
 
   linux:
     runs-on: ubuntu-latest
@@ -57,4 +67,14 @@ jobs:
             sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Write test credentials
+        env:
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          jq -rn '"[secrets]\nTEST_USER = { default = \(env.TEST_USER | tojson) }\nTEST_USER_EMAIL = { default = \(env.TEST_USER_EMAIL | tojson) }\nTEST_PASSWORD = { default = \(env.TEST_PASSWORD | tojson) }"' > fnox.local.toml
       - run: xvfb-run -a mise verify
+      - name: Remove test credentials
+        if: always()
+        run: rm -f fnox.local.toml
