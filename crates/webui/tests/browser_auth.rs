@@ -120,7 +120,7 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
     .map_err(|_| "open account")?;
   client
     .wait()
-    .for_element(logout.clone())
+    .for_element(logout)
     .await
     .map_err(|_| "wait for account menu")?;
   let profile = client
@@ -153,7 +153,7 @@ async fn journey(client: &Client, user: &str, email: &str, password: &str) -> Re
     .map_err(|_| "open reloaded account")?;
   client
     .wait()
-    .for_element(logout.clone())
+    .for_element(logout)
     .await
     .map_err(|_| "wait for reloaded account menu")?;
   let profile = client
