@@ -32,7 +32,13 @@ jobs:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
         run: |
-          jq -rn '"[secrets]\nTEST_USER = { default = \(env.TEST_USER | tojson) }\nTEST_USER_EMAIL = { default = \(env.TEST_USER_EMAIL | tojson) }\nTEST_PASSWORD = { default = \(env.TEST_PASSWORD | tojson) }"' > fnox.local.toml
+          {
+            echo '[secrets]'
+            for name in TEST_USER TEST_USER_EMAIL TEST_PASSWORD; do
+              jq -rn --arg n "$name" \
+                '"\($n) = { default = \(env[$n] | tojson) }"'
+            done
+          } > fnox.local.toml
       - run: mise verify
       - name: Remove test credentials
         if: always()
@@ -73,7 +79,13 @@ jobs:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
         run: |
-          jq -rn '"[secrets]\nTEST_USER = { default = \(env.TEST_USER | tojson) }\nTEST_USER_EMAIL = { default = \(env.TEST_USER_EMAIL | tojson) }\nTEST_PASSWORD = { default = \(env.TEST_PASSWORD | tojson) }"' > fnox.local.toml
+          {
+            echo '[secrets]'
+            for name in TEST_USER TEST_USER_EMAIL TEST_PASSWORD; do
+              jq -rn --arg n "$name" \
+                '"\($n) = { default = \(env[$n] | tojson) }"'
+            done
+          } > fnox.local.toml
       - run: xvfb-run -a mise verify
       - name: Remove test credentials
         if: always()
