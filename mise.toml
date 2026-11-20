@@ -5,7 +5,6 @@ min_version = "2026.10.4"
 experimental = true
 lockfile = true
 env_shell_expand = true
-npm.package_manager = "bun"
 idiomatic_version_file_enable_tools = ["rust"]
 python.uv_venv_auto = "create|source"
 

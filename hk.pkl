@@ -53,7 +53,7 @@ local linters = new Mapping<String, Step> {
     exclude = "**/.agents/skills/**"
   }
   ["yamllint"] = (Builtins.yamllint) {
-    exclude = "**/.agents/skills/**"
+    exclude = List("**/.agents/skills/**", ".mise/locks/**")
   }
   ["taplo"] {
     glob = "*.toml"
