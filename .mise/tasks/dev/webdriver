@@ -3,4 +3,5 @@
 #MISE description="Run the browser regression WebDriver"
 
 set -euo pipefail
-exec chromedriver --port=17812 --log-level=OFF
+driver=$(mise where http:chromedriver-for-testing)
+exec "$driver/chromedriver" --port=17812 --log-level=OFF

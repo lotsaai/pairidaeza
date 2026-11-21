@@ -14,3 +14,6 @@ thiserror = "2.0.21"
 tracing = "0.1.44"
 tracing-opentelemetry = { version = "0.34.0", features = ["metrics"] }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "json"] }
+
+[lints]
+workspace = true

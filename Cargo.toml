@@ -14,7 +14,6 @@ async-trait = "0.1"
 axum = "0.8"
 axum-extra = { version = "0.12.6", features = ["typed-header", "cookie"] }
 axum-login = { git = "https://github.com/maxcountryman/axum-login", branch = "main", default-features = false }
-base64 = "0.23.1"
 cbor4ii = { version = "1", features = ["serde1", "use_std"] }
 confique = { version = "0.4.0", features = ["toml"] }
 dashmap = "6"
@@ -24,37 +23,27 @@ eyre = "0.6"
 http = "1"
 http-body-util = "0.1"
 jiff = "0.2"
-jsonrpsee = { version = "0.26", default-features = false }
 jsonwebtoken = { version = "11.1.0", default-features = false, features = ["rust_crypto"] }
-nsh-base = "0.5.0"
-nsh-core = "0.5.0"
-nsh-engine = "0.5.0"
-nsh-platform-linux = "0.5.0"
-nsh-platform-macos = "0.5.0"
-nsh-platform-windows = "0.5.0"
-nsh-testing = "0.5.0"
+nsh-base = "0.6.0"
+nsh-core = "0.6.0"
+nsh-engine = "0.6.0"
+nsh-testing = "0.6.0"
 oauth2 = { version = "5", default-features = false }
 openidconnect = { version = "4", default-features = false }
-postgres-types = { version = "0.2", features = ["with-uuid-1"] }
 protocol = { path = "crates/protocol" }
-rand = "0.10.3"
 reqwest = { version = "0.13.5", default-features = false, features = ["default-tls", "http2", "json"] }
-rusqlite = { version = "0.42.0", features = ["bundled"] }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 schemars = "1"
 secrecy = { version = "0.10", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.11.1"
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "postgres", "migrate", "macros"] }
 test-context = "0.5.8"
 thiserror = "2"
 time = "0.3.55"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tokio-postgres = { version = "0.7.18", features = ["with-jiff-0_2", "with-serde_json-1", "with-uuid-1"] }
-tokio-tungstenite = { version = "0.30.0", features = ["rustls-tls-webpki-roots"] }
 tokio-util = "0.7"
-toml = "1.2.1+spec-1.1.0"
 tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.7.1", features = ["fs"] }
 tower-sessions = { version = "0.15.0", default-features = false, features = ["axum-core"] }

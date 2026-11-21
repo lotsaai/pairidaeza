@@ -27,16 +27,18 @@ test("mobile approval answers once and answered options stay disabled", async ()
 test("mobile message actions quote a reply and retain a reaction", async () => {
   const app = await open("./App.tsx");
   await app.press("role:button[Chief of Staff]");
+  await app.scroll("id:chat-messages", -800);
   await app.press("id:message-c2 >> role:button[React]");
   await app.waitFor("role:button[🎉]");
   await app.press("role:button[🎉]");
   await app.waitFor("role:button[🎉]", { state: "gone" });
   await app.waitFor("🎉");
+  await app.scroll("id:chat-messages", -800);
   await app.press("id:message-c2 >> role:button[Reply]");
   await app.waitFor("role:button[Cancel reply]");
   await app.type("text:Message Chief of Staff", "move it to Friday");
   await app.press("role:button[Send]");
-  await app.scroll("id:chat-messages", 10000);
+  if (app.shows("role:button[Jump to latest]")) await app.press("role:button[Jump to latest]");
   await app.waitFor("↩ You: what does this week look like?");
   await app.waitFor("role:button[Cancel reply]", { state: "gone" });
   await app.press("role:button[Back]");

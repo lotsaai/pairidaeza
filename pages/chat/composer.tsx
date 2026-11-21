@@ -30,7 +30,7 @@ export function Composer(props: { chatId: string; bubble?: BubbleColors }) {
     try {
       const picked = source === "photos" ? await Picker.pickImages({ multiple: true }) : await Picker.pickFiles({ multiple: true });
       if (picked.length) {
-        attachments.update((all) => [...new Set([...all, ...picked.map((p) => p.file.name)])]);
+        attachments.update((all) => [...new Set([...all, ...picked.map((p) => ("name" in p ? p.name : p.file.name))])]);
       }
     } catch {
       pickerError.set("Could not open the file picker. Please try again.");

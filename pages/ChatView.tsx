@@ -50,6 +50,7 @@ export function ChatView(props: { chatId: string }) {
           each={shown()}
           keyExtractor={(m) => m.id}
           estimatedItemSize={96}
+          initialScrollAtEnd
           maintainVisibleContentPosition={{ autoscrollToBottomThreshold: 40 }}
           onScroll={(e) => atEnd.set(e.offset.y + e.size.height >= e.contentSize.height - 40)}
           class="flex-1"

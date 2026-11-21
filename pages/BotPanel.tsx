@@ -3,6 +3,7 @@ import { Scroll, Text, View } from "nsh";
 import { AlertDialog, Button, Input, Select, Sheet, Tab, Tabs, TextView } from "nsh/base";
 import { BotFace, Choices, Field, fieldClass, Icon, IconButton, popupClass, SectionTitle, SwitchRow, TextButton } from "../components/ui";
 import { nav, type PanelTab, panelBotId, panelPageId, panelRoutineId, panelTab, roomy, wide } from "../nav";
+import { SidePanel } from "./PanelResize";
 import {
   addRoutine,
   type Bot,
@@ -312,9 +313,9 @@ export function BotPanelSide() {
   return (
     <If when={roomy() ? panelBotId() : null}>
       {(id) => (
-        <View class="w-96 border-l border-border">
+        <SidePanel>
           <BotDetails botId={id()} onClose={closePanel} />
-        </View>
+        </SidePanel>
       )}
     </If>
   );

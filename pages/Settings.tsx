@@ -346,9 +346,11 @@ function Page(props: { title: string; children: JSX.Element }) {
       title={props.title}
       header={platform.desktop ? <Header title={props.title} /> : undefined}
       headerLeft={
-        settingsNav.routes().length === 1 ? <IconButton icon="chevron-left" label="Back to workspace" onPress={close} /> : undefined
+        !platform.desktop && settingsNav.routes().length === 1 ? (
+          <IconButton icon="chevron-left" label="Back to workspace" onPress={close} />
+        ) : undefined
       }
-      headerRight={<IconButton icon="x" label="Close settings" onPress={close} />}
+      headerRight={platform.desktop ? undefined : <IconButton icon="x" label="Close settings" onPress={close} />}
       ios={{ headerRightSystemItem: "close" }}
       class="bg-background"
     >

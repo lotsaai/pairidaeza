@@ -30,7 +30,6 @@ local linters = new Mapping<String, Step> {
   }
   ["cargo-sort"] = new Step {
     glob = List("**/Cargo.toml")
-    stage = List("**/Cargo.toml")
     check = "cargo sort --workspace --grouped --check ."
     fix = "cargo sort --workspace --grouped ."
     check_first = true
@@ -54,11 +53,26 @@ local linters = new Mapping<String, Step> {
     exclude = "**/.agents/skills/**"
   }
   ["yamllint"] = (Builtins.yamllint) {
-    exclude = "**/.agents/skills/**"
+    exclude = List("**/.agents/skills/**", ".mise/locks/**")
   }
   ["taplo"] {
     glob = "*.toml"
     check = "taplo check {{files}}"
+  }
+  ["chrome-lock"] = new Step {
+    glob = List("hk.pkl", "mise.toml", "mise.lock")
+    check = """
+      python -c '
+      from pathlib import Path
+      import tomllib
+
+      tools = tomllib.loads(Path("mise.lock").read_text())["tools"]
+      chrome = [entry["version"] for entry in tools.get("http:chrome-for-testing", [])]
+      driver = [entry["version"] for entry in tools.get("http:chromedriver-for-testing", [])]
+      if len(chrome) != 1 or chrome != driver:
+          raise SystemExit(f"Chrome and ChromeDriver must lock the same release. Chrome: {chrome}; ChromeDriver: {driver}")
+      '
+      """
   }
   ["pkl"] {
     glob = "*.pkl"

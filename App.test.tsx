@@ -29,7 +29,9 @@ test("an option question keeps its options once answered", async () => {
 test("a reply is quoted above the message it sends", async () => {
   const app = await open("./App.tsx", { width: 1280, height: 800, platform: "macos" });
   await app.press("role:button[Chief of Staff]");
+  await app.waitFor("text:Message Chief of Staff");
   await app.hover("text:what does this week look like?");
+  await app.waitFor("role:button[Reply]");
   await app.press("role:button[Reply]");
   await app.waitFor("role:button[Cancel reply]");
   await app.type("text:Message Chief of Staff", "move it to Friday");
@@ -41,7 +43,9 @@ test("a reply is quoted above the message it sends", async () => {
 test("a reaction shows under its message", async () => {
   const app = await open("./App.tsx", { width: 1280, height: 800, platform: "macos" });
   await app.press("role:button[Chief of Staff]");
+  await app.waitFor("text:Message Chief of Staff");
   await app.hover("text:what does this week look like?");
+  await app.waitFor("role:button[React]");
   await app.press("role:button[React]");
   await app.press("role:button[🎉]");
   await app.waitFor("role:button[🎉]", { state: "gone" });

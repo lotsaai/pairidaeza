@@ -4,6 +4,7 @@ import { Checkbox, Input, Sheet } from "nsh/base";
 import { BotFace, Field, fieldClass, Icon, IconButton, TextButton } from "../components/ui";
 import { newGroupOpen, nav, openChat, roomy, wide } from "../nav";
 import { botsInSpace, createGroup, currentSpaceId, GROUP_MEMBER_MAX, GROUP_MEMBER_MIN, GROUP_NAME_MAX_LENGTH } from "../store";
+import { SidePanel } from "./PanelResize";
 
 export function NewGroupForm(props: { onClose: () => void }) {
   const name = signal("");
@@ -102,9 +103,9 @@ const close = () => newGroupOpen.set(false);
 export function NewGroupPanelSide() {
   return (
     <If when={roomy() && newGroupOpen()}>
-      <View class="w-96 border-l border-border">
+      <SidePanel>
         <NewGroupForm onClose={close} />
-      </View>
+      </SidePanel>
     </If>
   );
 }

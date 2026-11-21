@@ -1,0 +1,10 @@
+[tools]
+"cargo:docsrs-mcp" = { version = "latest", install_env = { PKG_CONFIG_PATH = "/usr/lib/openssl-3/pkgconfig" } }
+
+[daemons.desktop-display]
+run = "exec msb run --name pairidaeza-desktop-display --replace --cpus 2 --memory 1G -p 127.0.0.1:6099:6000 alpine -- sh -c 'apk add --no-cache xvfb && exec Xvfb :0 -listen tcp -ac -nolisten unix -screen 0 1920x1080x24'"
+ready_cmd = "msb exec pairidaeza-desktop-display -- test -e /tmp/.X0-lock"
+
+[tasks."test:desktop"]
+daemons = ["api", "desktop-display"]
+env = { DISPLAY = "127.0.0.1:99", WAYLAND_DISPLAY = false, GDK_BACKEND = "x11" }

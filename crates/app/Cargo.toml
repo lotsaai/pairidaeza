@@ -18,9 +18,6 @@ webpki-root-certs = "1"
 [dependencies]
 nsh-base.workspace = true
 nsh-core.workspace = true
-nsh-platform-linux.workspace = true
-nsh-platform-macos.workspace = true
-nsh-platform-windows.workspace = true
 
 [dev-dependencies]
 fantoccini = { version = "0.22.1", default-features = false, features = ["rustls-tls"] }

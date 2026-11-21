@@ -1,7 +1,7 @@
 // Navigation and surface state: the phone's stack, the selected chat, which overlays are open, and the sidebar's saved preferences.
 import { effect, type Signal, signal, Storage, windowSize } from "nsh";
 import { createNavStack } from "nsh/base";
-import { markOpened } from "./store";
+import { chatById, markOpened } from "./store";
 
 export type Route =
   | { name: "chats" }
@@ -30,6 +30,9 @@ export const mainView = signal<"chat" | "artifacts">("chat");
 export function openChat(id: string) {
   selectedChatId.set(id);
   mainView.set("chat");
+  // An open details panel follows the selection to the new chat's bot.
+  const botId = chatById(id)?.botIds[0];
+  if (wide() && botId && panelBotId() !== null && panelBotId() !== botId) openBotDetails(botId, panelTab());
   markOpened(id);
   if (!wide()) nav.push({ name: "chat", id });
 }
@@ -153,3 +156,18 @@ export const sidebarShownWidth = () => {
   if (sidebarRail()) return SIDEBAR_RAIL_WIDTH;
   return clampSidebarWidth(sidebarDragWidth() ?? sidebarWidth());
 };
+
+// Right panel slice (bot details, new group): its width and the live width while its edge is dragged.
+export const PANEL_MIN_WIDTH = 320;
+/** The panel's width on roomy windows, in points (320 up to what leaves the chat 320; 384 by default). */
+export const panelWidth = persisted("pairidaeza.panelWidth", 384);
+
+/** The widest the panel gets: whatever leaves the chat 320 beside the sidebar. */
+export const panelMaxWidth = () => Math.max(PANEL_MIN_WIDTH, windowSize().width - sidebarShownWidth() - 320);
+export const clampPanelWidth = (width: number) => Math.round(Math.min(panelMaxWidth(), Math.max(PANEL_MIN_WIDTH, width)));
+
+/** The width the panel's edge is dragged to right now, or null while it is not dragged. */
+export const panelDragWidth = signal<number | null>(null);
+
+/** The panel's width beside the chat, drag included. */
+export const panelShownWidth = () => clampPanelWidth(panelDragWidth() ?? panelWidth());

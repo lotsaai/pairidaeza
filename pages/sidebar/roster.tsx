@@ -49,6 +49,10 @@ const rows = computed<Row[]>(() => {
   });
 });
 
+/** The list's items are row ids, so a change to a chat's data keeps its rows (and what the list measured of them). */
+const rowIds = computed(() => rows().map((r) => r.id));
+const rowById = computed(() => new Map(rows().map((r) => [r.id, r])));
+
 /** The first tile of every group after the first: the rail separates groups with a line. */
 const separatedIds = computed(() => {
   const ids = new Set<string>();
@@ -340,18 +344,19 @@ function ChatRow(props: { chatId: string }) {
 export function Roster() {
   return (
     <List
-      each={rows()}
-      keyExtractor={(row) => row.id}
+      each={rowIds()}
+      keyExtractor={(id) => id}
       estimatedItemSize={64}
       keyboardShouldPersistTaps="handled"
       class="flex-1"
       contentClass={sidebarRail() ? "pb-2" : "px-2 pb-2"}
     >
-      {(row) => (
+      {(id) => (
         // Keyed by the row's id: a reused cell rebuilds for its new row rather than keep the old one's kind.
-        <Each of={[row()]} key={(r) => r.id}>
-          {(r) => {
-            const it = r();
+        <Each of={[id()]} key={(i) => i}>
+          {(i) => {
+            const it = rowById().get(i());
+            if (!it) return null;
             return it.kind === "header" ? <RosterHeader groupKey={it.group.key} /> : <ChatRow chatId={it.chat.id} />;
           }}
         </Each>

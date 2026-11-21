@@ -5,17 +5,34 @@ min_version = "2026.10.4"
 experimental = true
 lockfile = true
 env_shell_expand = true
-npm.package_manager = "bun"
 idiomatic_version_file_enable_tools = ["rust"]
 python.uv_venv_auto = "create|source"
+
+[plugins]
+android-sdkmanager = "https://github.com/chbiel/mise-android-sdkmanager"
+
+[tool_alias.android-sdk]
+backend = "vfox:mise-plugins/vfox-android-sdk"
+
+[vars]
+chrome_release_index = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json"
 
 [tools]
 worktrunk = { version = "latest", workflow = "release.yaml" }
 "npm:oxfmt" = "latest"
 "aqua:nextest-rs/nextest/cargo-nextest" = "latest"
-chromedriver = "157"
+"http:chrome-for-testing" = { version = "latest", os = ["linux"], version_list_url = "{{ vars.chrome_release_index }}", version_json_path = ".channels.Stable.version", platforms.linux-x64.url = "https://storage.googleapis.com/chrome-for-testing-public/{{ version }}/linux64/chrome-linux64.zip" }
+"http:chromedriver-for-testing" = { version = "latest", os = ["linux"], version_list_url = "{{ vars.chrome_release_index }}", version_json_path = ".channels.Stable.version", platforms.linux-x64.url = "https://storage.googleapis.com/chrome-for-testing-public/{{ version }}/linux64/chromedriver-linux64.zip" }
 pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
-"github:longbridge/nsh" = { version = "latest", minimum_release_age = "5m" }
+"github:longbridge/nsh" = { version = "latest", minimum_release_age = "5m", postinstall = '''
+{% if os() == "linux" %}
+nsh component add android android-symbols web
+{% elif os() == "macos" %}
+nsh component add web ios
+{% else %}
+exit 0
+{% endif %}
+''' }
 "cargo:cargo-sort" = "latest"
 hk = "latest"
 node = "24"
@@ -33,10 +50,20 @@ python = "3.14"
 watchexec = "latest"
 shfmt = "latest"
 zig = "latest"
-"cargo:docsrs-mcp" = "latest"
+go = "latest"
 "go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "latest"
 "cargo:sqlx-cli" = "latest"
 "pypi:yamllint" = "latest"
+"go:filippo.io/age/extra/age-plugin-tag" = "latest"
+java = { version = "lts", os = ["linux"] }
+android-sdk = { version = "latest", os = ["linux"] }
+"android-sdkmanager:platform-tools" = { version = "latest", os = ["linux"], depends = ["android-sdk", "java"] }
+"android-sdkmanager:build-tools" = { version = "35.0.1", os = ["linux"], depends = ["android-sdk", "java"] }
+"android-sdkmanager:platforms" = { version = "android-35", os = ["linux"], depends = ["android-sdk", "java"] }
+"android-sdkmanager:ndk" = { version = "28.2.13676358", os = ["linux"], depends = ["android-sdk", "java"] }
+"android-sdkmanager:emulator" = { version = "latest", os = ["linux"], depends = ["android-sdk", "java"] }
+"android-sdkmanager:system-images/google_apis/x86_64" = { version = "android-35", os = ["linux"], depends = ["android-sdk", "java"] }
+microsandbox = "latest"
 
 [secrets.fnox]
 
@@ -79,6 +106,28 @@ watch = [
 [daemons.webdriver]
 task = "dev:webdriver"
 ready_cmd = 'curl --fail --silent http://127.0.0.1:17812/status'
+
+[daemons.android-adb]
+run = "exec adb -P 17813 server nodaemon"
+env = { ADB_USB = "0", ADB_EMU = "0", ADB_MDNS_AUTO_CONNECT = "0" }
+ready_port = 17813
+
+[daemons.android-emulator]
+depends = ["android-adb"]
+env = { ANDROID_ADB_SERVER_PORT = "17813" }
+init = '''
+export ANDROID_AVD_HOME="$PWD/target/android/avd"
+avd=pairidaeza-test-api35-16g
+mkdir -p "$ANDROID_AVD_HOME" &&
+  { test -f "$ANDROID_AVD_HOME/$avd.ini" ||
+    printf 'no\n' | avdmanager create avd --name "$avd" \
+      --package 'system-images;android-35;google_apis;x86_64' --device pixel_6; }'''
+run = 'exec emulator -avd "$avd" -ports 5680,5681 -partition-size 16384 -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader'
+# Android sets sys.boot_completed before boot-time configuration changes can recreate the NSH activity.
+ready_cmd = '''
+test -n "$(adb -H 127.0.0.1 -P 17813 -s emulator-5680 logcat -b system -d -v raw \
+  -e '^Finished processing BOOT_COMPLETED for u0$' ActivityManager:I '*:S')"
+'''
 
 
 [env]
